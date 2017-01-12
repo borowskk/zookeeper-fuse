@@ -1,0 +1,16 @@
+The zookeeper-fuse project is a libfuse compatiblue userspace filesystem backended by zookeeper. It allows a user to mount the entire zoo or a specific node within the zoo as a filesystem.
+
+Features:
+  - Mount the entire zoo or a subset
+  - Writes to the filesystem gets synched to the zoo
+  - Reads from the filesystem are not cached
+  - Supports autentication
+
+Building:
+  autoreconf -fi
+  ./configure
+  make
+  make install
+
+Mounting:
+  zookeper-fuse /mnt/zoo -- --zooHosts localhost:2181

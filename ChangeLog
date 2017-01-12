@@ -1,0 +1,19 @@
+8/7/2016 - Initial capabilities implemented and tested
+1. Mount entire zoo
+2. Read directories for children
+3. Read files for contents
+4. Write new contents to files
+8/28/2016 - Improvements to support reading/writing directory node contents
+1. Support two display modes for leaf nodes, LEAF_AS_DIR/LEAF_AS_FILE
+2. Only connect to zookeeper once
+3. Support specification of a root path within the zoo
+4. Support authentication
+1/11/2017 - Logging improvments
+1. Support multiple log levels
+2. Groundwork for eventual syslog support
+TODO:
+1. Syslog logging support
+2. Handle session expiration events for zookeeper
+3. Test what happens when a file becomes a directory while mounted (via manual zkCli.sh editing)
+4. Improved zookeeper lib detection in autotools
+5. Add comments
