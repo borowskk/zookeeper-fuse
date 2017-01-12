@@ -4,7 +4,7 @@ Features:
   - Mount the entire zoo or a subset
   - Writes to the filesystem gets synched to the zoo
   - Reads from the filesystem are not cached
-  - Supports autentication
+  - Supports authentication
 
 Building:
   autoreconf -fi
