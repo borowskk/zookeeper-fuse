@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
         { 0, 0, 0, 0}
     };
     char c;
-    while ((c = getopt_long(argc - argumentDivider, argv + argumentDivider, "hf:s:a:l:", longopts, NULL)) != -1) {
+    while ((c = getopt_long(argc - argumentDivider, argv + argumentDivider, "hf:s:a:d:l:", longopts, NULL)) != -1) {
         switch (c) {
             case 'h':
                 cerr << "Usage: "<< argv[0] << " [OPTIONS]\n"
