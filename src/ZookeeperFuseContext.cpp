@@ -24,11 +24,22 @@
 #include <unistd.h>
 
 #include "ZookeeperFuseContext.h"
+#include "NativeLogger.cpp"
+#include "Log4CPPLogger.cpp"
 
 ZookeeperFuseContext::ZookeeperFuseContext(Logger::LogLevel maxLevel, const string &hosts, const string &authScheme, const string &auth, 
                                            const string &path, LeafMode leafMode, size_t maxFileSize):
-logger_(maxLevel), hosts_(hosts), authSheme_(authScheme), auth_(auth), path_(path), handle_(NULL), leafMode_(leafMode), maxFileSize_(maxFileSize), eventQueue_(8) {
-    
+hosts_(hosts), authSheme_(authScheme), auth_(auth), path_(path), handle_(NULL), leafMode_(leafMode), maxFileSize_(maxFileSize), eventQueue_(8) {
+
+
+#ifdef HAVE_LOG4CPP
+	Log4CPPLogger * logger = new Log4CPPLogger(maxLevel);
+#endif
+#ifndef HAVE_LOG4CPP
+	NativeLogger * logger = new NativeLogger(maxLevel);
+#endif
+
+	logger_ = logger;
 }
 
 ZookeeperFuseContext::~ZookeeperFuseContext() {
@@ -54,7 +65,7 @@ void ZookeeperFuseContext::fireConnectedEvent() {
 }
 
 Logger& ZookeeperFuseContext::getLogger() {
-    return logger_;
+    return *logger_;
 }
 
 zhandle_t* ZookeeperFuseContext::getZookeeperHandle() {

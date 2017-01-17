@@ -19,9 +19,13 @@
  * Created on July 27, 2016, 7:52 PM
  */
 
+
 #include <iostream>
 #include <string>
 #include <sstream>
+
+#ifndef LOGGER_H
+#define LOGGER_H
 
 using namespace std;
 
@@ -35,15 +39,48 @@ public:
         TRACE
     };
 
-    Logger(LogLevel maxLevel = INFO);
-    virtual ~Logger();
+    Logger(LogLevel maxLevel = INFO)
+    : maxLevel_(maxLevel) {}
 
-    void log(LogLevel level, char *fmt, ...);
+    virtual void log(LogLevel level, char *fmt, ...) = 0;
 
-    void setLogLevel(LogLevel level);    
+    virtual void setLogLevel(LogLevel level) = 0;
 
-    static LogLevel stringToLevel(string level);
-    static string levelToString(LogLevel level);
-private:
+    static  Logger::LogLevel stringToLevel(string level) {
+       for (int i = ERROR; i <= TRACE; i++) {
+           LogLevel retval = static_cast<LogLevel>(i);
+           if (levelToString(retval) == level) {
+               return retval;
+           }
+       }
+       return ERROR;
+    }
+
+    static string levelToString(LogLevel level) {
+        string retval;
+        switch (level) {
+            case ERROR:
+    	    retval = "ERROR";
+    	    break;
+            case WARNING:
+    	    retval = "WARNING";
+    	    break;
+            case INFO:
+    	    retval = "INFO";
+    	    break;
+            case DEBUG:
+    	    retval = "DEBUG";
+        	    break;
+            case TRACE:
+    	    retval = "TRACE";
+    	    break;
+            default:
+        	    retval = "INVALID";
+        }
+        return retval;
+    }
+protected:
     LogLevel maxLevel_; 
 };
+
+#endif
