@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * File:   Logger.cpp
- * Author: kyle
+ * File:   Log4CPPLogger.cpp
+ * Author: glantzn
  *
- * Created on July 27, 2016, 7:52 PM
+ * Created on January 1, 2017, 7:52 PM
  */
 
 
@@ -102,40 +102,6 @@ public:
 
 		void setLogLevel(LogLevel level) {
 		    maxLevel_ = level;
-		}
-
-		string levelToString(LogLevel level) {
-		    string retval;
-		    switch (level) {
-		        case ERROR:
-			    retval = "ERROR";
-			    break;
-		        case WARNING:
-			    retval = "WARNING";
-			    break;
-		        case INFO:
-			    retval = "INFO";
-			    break;
-		        case DEBUG:
-			    retval = "DEBUG";
-		    	    break;
-		        case TRACE:
-			    retval = "TRACE";
-			    break;
-		        default:
-		    	    retval = "INVALID";
-		    }
-		    return retval;
-		}
-
-		Logger::LogLevel stringToLevel(string level) {
-		   for (int i = ERROR; i <= TRACE; i++) {
-		       LogLevel retval = static_cast<LogLevel>(i);
-		       if (levelToString(retval) == level) {
-		           return retval;
-		       }
-		   }
-		   return ERROR;
 		}
 
 };
