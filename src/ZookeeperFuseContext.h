@@ -29,7 +29,7 @@
 #include <boost/lockfree/queue.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "Logger.h"
+#include "logger/Logger.h"
 
 using namespace std;
 using namespace boost;

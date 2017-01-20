@@ -4,7 +4,8 @@ zookeeperfuse_SOURCES = src/ZookeeperFuse.cpp\
                    src/ZooFile.h\
                    src/ZookeeperFuseContext.cpp\
                    src/ZookeeperFuseContext.h\
-                   src/Logger.cpp\
-                   src/Logger.h
+                   src/logger/NativeLogger.cpp\
+				   src/logger/Log4CPPLogger.cpp\
+                   src/logger/Logger.h
 
 

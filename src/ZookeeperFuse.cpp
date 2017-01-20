@@ -73,6 +73,7 @@ int main(int argc, char** argv) {
     LeafMode leafMode = LEAF_AS_DIR;
     size_t maxFileSize = 1024;
     Logger::LogLevel logLevel = Logger::INFO;
+    string logPropFile;
 
     string division = "--";
     int argumentDivider = 0;
@@ -131,8 +132,6 @@ int main(int argc, char** argv) {
                 break;
             case 'd':
                 logLevel = Logger::stringToLevel(optarg);
-                break;
-            default:
                 break;
         }
     }
