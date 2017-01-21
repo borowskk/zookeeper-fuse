@@ -1,4 +1,4 @@
-The zookeeper-fuse project is a libfuse compatiblue userspace filesystem backended by zookeeper. It allows a user to mount the entire zoo or a specific node within the zoo as a filesystem.
+The zookeeper-fuse project is a libfuse compatible userspace filesystem backended by zookeeper. It allows a user to mount the entire zoo or a specific node within the zoo as a filesystem.
 
 Features:
   - Mount the entire zoo or a subset
