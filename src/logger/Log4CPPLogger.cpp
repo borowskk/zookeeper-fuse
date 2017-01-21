@@ -19,90 +19,73 @@
  * Created on January 1, 2017, 7:52 PM
  */
 
-
-
 #ifdef HAVE_LOG4CPP
 
-#include <cstdarg>
-#include <stdio.h>
-#include <sstream>
+#include "Log4CPPLogger.h"
 
-#include "Logger.h"
+Log4CPPLogger::Log4CPPLogger(Logger::LogLevel& maxLevel) : Logger(maxLevel) {
+    fprintf(stdout, "Log Level Set To: %s for Log4CPP\n", levelToString(maxLevel).c_str());
 
-#include <log4cpp/Category.hh>
-#include <log4cpp/BasicLayout.hh>
-#include <log4cpp/Configurator.hh>
-#include <log4cpp/Appender.hh>
-#include <log4cpp/OstreamAppender.hh>
+    // Configure log4cpp root logger settings.
+    log4cpp::Category& rootLog = log4cpp::Category::getRoot();
+    log4cpp::Priority::Value logPriority;
 
+    switch (maxLevel) {
+        case Logger::INFO:
+            logPriority = log4cpp::Priority::INFO;
+            break;
+        case Logger::DEBUG:
+            logPriority = log4cpp::Priority::DEBUG;
+            break;
+        case Logger::WARNING:
+            logPriority = log4cpp::Priority::WARN;
+            break;
+        default:
+            logPriority = log4cpp::Priority::ERROR;
+            break;
+    }
+    rootLog.setPriority(logPriority);
 
-class Log4CPPLogger : public Logger {
+    log4cpp::Appender *appender = new log4cpp::OstreamAppender("console", &std::cout);
+    appender->setLayout(new log4cpp::BasicLayout());
 
-private:
-	log4cpp::Category* zkLogger_;
+    zkLogger_ = &log4cpp::Category::getInstance(std::string("zkLogger"));
+    zkLogger_->addAppender(appender);
 
-public:
-	Log4CPPLogger(Logger::LogLevel& maxLevel) : Logger(maxLevel) {
-		fprintf(stdout, "Log Level Set To: %s for Log4CPP\n", levelToString(maxLevel).c_str());
+    this->log(Logger::DEBUG, "testing LOG4CPP");
+}
 
-		// Configure log4cpp root logger settings.
-		log4cpp::Category& rootLog = log4cpp::Category::getRoot();
-		log4cpp::Priority::Value logPriority;
+Log4CPPLogger::~Log4CPPLogger() {
+}
 
-		switch(maxLevel) {
-		case Logger::INFO:
-			logPriority = log4cpp::Priority::INFO;
-			break;
-		case Logger::DEBUG:
-			logPriority = log4cpp::Priority::DEBUG;
-			break;
-		case Logger::WARNING:
-			logPriority = log4cpp::Priority::WARN;
-			break;
-		default:
-			logPriority = log4cpp::Priority::ERROR;
-			break;
-		}
-		rootLog.setPriority(logPriority);
-
-		log4cpp::Appender *appender = new log4cpp::OstreamAppender("console", &std::cout);
-		appender->setLayout(new log4cpp::BasicLayout());
-
-		zkLogger_ = &log4cpp::Category::getInstance(std::string("zkLogger"));
-		zkLogger_->addAppender(appender);
-
-		this->log(Logger::DEBUG, "testing LOG4CPP");
-	}
-
-	virtual ~Log4CPPLogger() {}
-
-	virtual void log(LogLevel level, char *fmt, ...) {
-
-		// BEGIN LOG4CPP Logging
-		// switch on Logger configurations and adapt them to log4cpp logging functions
-		switch(level) {
-		case ERROR:
-			zkLogger_->error(fmt);
-			break;
-		case WARNING:
-			zkLogger_->warn(fmt);
-			break;
-		case INFO:
-			zkLogger_->info(fmt);
-			break;
-		case DEBUG:
-			zkLogger_->debug(fmt);
-			break;
-		case TRACE:
-			zkLogger_->debug(fmt);
-			break;
-		}
-
-		}
-
-		void setLogLevel(LogLevel level) {
-		    maxLevel_ = level;
-		}
-
-};
+void Log4CPPLogger::log(LogLevel level, char *fmt, ...) {
+    char buffer[512];
+    
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buffer, 512, fmt, args);
+    va_end(args);
+    
+    string out = levelToString(level) + " " + buffer;
+    
+    // BEGIN LOG4CPP Logging
+    // switch on Logger configurations and adapt them to log4cpp logging functions
+    switch (level) {
+        case ERROR:
+            zkLogger_->error(out);
+            break;
+        case WARNING:
+            zkLogger_->warn(out);
+            break;
+        case INFO:
+            zkLogger_->info(out);
+            break;
+        case DEBUG:
+            zkLogger_->debug(out);
+            break;
+        case TRACE:
+            zkLogger_->debug(out);
+            break;
+    }
+}
 #endif

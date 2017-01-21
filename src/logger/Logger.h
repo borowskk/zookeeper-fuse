@@ -31,6 +31,7 @@ using namespace std;
 
 class Logger {
 public:
+
     enum LogLevel {
         ERROR,
         WARNING,
@@ -39,48 +40,52 @@ public:
         TRACE
     };
 
-    Logger(LogLevel maxLevel = INFO)
-    : maxLevel_(maxLevel) {}
+    Logger(LogLevel maxLevel = INFO);
 
-    virtual void log(LogLevel level, char *fmt, ...) = 0;
+    ~Logger();
 
-    virtual void setLogLevel(LogLevel level) = 0;
+    virtual void log(LogLevel level, char *fmt, ...);
 
-    static  Logger::LogLevel stringToLevel(string level) {
-       for (int i = ERROR; i <= TRACE; i++) {
-           LogLevel retval = static_cast<LogLevel>(i);
-           if (levelToString(retval) == level) {
-               return retval;
-           }
-       }
-       return ERROR;
+    virtual void setLogLevel(LogLevel level);
+
+    LogLevel getLogLevel();
+    
+    static Logger::LogLevel stringToLevel(string level) {
+        for (int i = ERROR; i <= TRACE; i++) {
+            LogLevel retval = static_cast<LogLevel> (i);
+            if (levelToString(retval) == level) {
+                return retval;
+            }
+        }
+        return ERROR;
     }
 
     static string levelToString(LogLevel level) {
         string retval;
         switch (level) {
             case ERROR:
-    	    retval = "ERROR";
-    	    break;
+                retval = "ERROR";
+                break;
             case WARNING:
-    	    retval = "WARNING";
-    	    break;
+                retval = "WARNING";
+                break;
             case INFO:
-    	    retval = "INFO";
-    	    break;
+                retval = "INFO";
+                break;
             case DEBUG:
-    	    retval = "DEBUG";
-        	    break;
+                retval = "DEBUG";
+                break;
             case TRACE:
-    	    retval = "TRACE";
-    	    break;
+                retval = "TRACE";
+                break;
             default:
-        	    retval = "INVALID";
+                retval = "INVALID";
         }
         return retval;
     }
-protected:
-    LogLevel maxLevel_; 
+    
+private:
+    LogLevel maxLevel_;
 };
 
 #endif
