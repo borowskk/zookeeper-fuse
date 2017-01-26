@@ -25,7 +25,7 @@
 
 #include "ZookeeperFuseContext.h"
 #include "logger/Logger.h"
-#include "logger/Log4CPPLogger.cpp"
+#include "logger/Log4CPPLogger.h"
 
 ZookeeperFuseContext::ZookeeperFuseContext(Logger::LogLevel maxLevel, const string &hosts, const string &authScheme, const string &auth, 
                                            const string &path, LeafMode leafMode, size_t maxFileSize):

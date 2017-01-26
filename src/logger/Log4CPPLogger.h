@@ -21,6 +21,9 @@
 
 #ifdef HAVE_LOG4CPP
 
+#ifndef LOG4CPPLOGGER_H
+#define LOG4CPPLOGGER_H
+
 #include <cstdarg>
 #include <stdio.h>
 #include <sstream>
@@ -46,6 +49,9 @@ public:
 
 	virtual void log(LogLevel level, char *fmt, ...);
 };
+
+
+#endif
 #endif
 
 
