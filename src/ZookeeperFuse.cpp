@@ -73,6 +73,7 @@ int main(int argc, char** argv) {
     LeafMode leafMode = LEAF_AS_DIR;
     size_t maxFileSize = 1024;
     Logger::LogLevel logLevel = Logger::INFO;
+    string logPropFile;
 
     string division = "--";
     int argumentDivider = 0;
@@ -97,7 +98,7 @@ int main(int argc, char** argv) {
         { 0, 0, 0, 0}
     };
     char c;
-    while ((c = getopt_long(argc - argumentDivider, argv + argumentDivider, "hf:s:a:l:", longopts, NULL)) != -1) {
+    while ((c = getopt_long(argc - argumentDivider, argv + argumentDivider, "hf:s:a:d:l:", longopts, NULL)) != -1) {
         switch (c) {
             case 'h':
                 cerr << "Usage: "<< argv[0] << " [OPTIONS]\n"
@@ -131,8 +132,6 @@ int main(int argc, char** argv) {
                 break;
             case 'd':
                 logLevel = Logger::stringToLevel(optarg);
-                break;
-            default:
                 break;
         }
     }

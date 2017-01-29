@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2016 Kyle Borowski
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,37 +13,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * File:   Logger.h
- * Author: kyle
- * 
- * Created on July 27, 2016, 7:52 PM
+ * File:   Log4CPPLogger.h
+ * Author: glantzn
+ *
+ * Created on January 1, 2017, 7:52 PM
  */
 
-#include <iostream>
-#include <string>
+#ifdef HAVE_LOG4CPP
+
+#ifndef LOG4CPPLOGGER_H
+#define LOG4CPPLOGGER_H
+
+#include <cstdarg>
+#include <stdio.h>
 #include <sstream>
 
-using namespace std;
+#include "Logger.h"
 
-class Logger {
-public:
-    enum LogLevel {
-        ERROR,
-        WARNING,
-        INFO,
-        DEBUG,
-        TRACE
-    };
+#include <log4cpp/Category.hh>
+#include <log4cpp/BasicLayout.hh>
+#include <log4cpp/Configurator.hh>
+#include <log4cpp/Appender.hh>
+#include <log4cpp/OstreamAppender.hh>
 
-    Logger(LogLevel maxLevel = INFO);
-    virtual ~Logger();
 
-    void log(LogLevel level, char *fmt, ...);
+class Log4CPPLogger : public Logger {
 
-    void setLogLevel(LogLevel level);    
-
-    static LogLevel stringToLevel(string level);
-    static string levelToString(LogLevel level);
 private:
-    LogLevel maxLevel_; 
+	log4cpp::Category* zkLogger_;
+
+public:
+	Log4CPPLogger(Logger::LogLevel& maxLevel);
+
+	virtual ~Log4CPPLogger();
+
+	virtual void log(LogLevel level, const char *fmt, ...);
 };
+
+
+#endif
+#endif
+
+

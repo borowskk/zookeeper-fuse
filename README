@@ -14,3 +14,22 @@ Building:
 
 Mounting:
   zookeper-fuse /mnt/zoo -- --zooHosts localhost:2181
+
+
+
+
+
+For development using Ubuntu 16.04 (Xenial Xerus)
+Required Packages for compilation:
+ - libzookeeper-mt-dev
+ - libfuse-dev 
+ - zookeeper
+
+Optional Packages:
+ - liblog4cpp5-dev
+
+Zookeeper Package:
+ - zookeeperd
+
+Useful packages for testing and debugging:
+ - zooinspector
