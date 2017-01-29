@@ -27,19 +27,18 @@
 #include "Logger.h"
 
 Logger::Logger(Logger::LogLevel maxLevel) : maxLevel_(maxLevel) {
-    fprintf(stdout, "Log Level Set To: %s\n", levelToString(maxLevel).c_str());
+    printf("Log Level Set To: %s\n", levelToString(maxLevel).c_str());
     this->log(Logger::DEBUG, "testing");
 }
 
 Logger::~Logger() {
 }
 
-void Logger::log(LogLevel level, char *fmt, ...) {
+void Logger::log(LogLevel level, const char *fmt, ...) {
     FILE* fd = level == ERROR ? stderr : stdout;
 
     if (level <= maxLevel_) {
-        fprintf(fd, levelToString(level).c_str());
-        fprintf(fd, " ");
+        fprintf(fd, "%s", getLogPrefix(level).c_str());
 
         va_list args;
         va_start(args, fmt);
@@ -57,4 +56,8 @@ void Logger::setLogLevel(LogLevel level) {
 
 Logger::LogLevel Logger::getLogLevel() {
     return maxLevel_;
+}
+
+string Logger::getLogPrefix(LogLevel level) {
+    return levelToString(level) + " ";
 }

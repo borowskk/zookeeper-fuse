@@ -47,7 +47,7 @@ public:
 
 	virtual ~Log4CPPLogger();
 
-	virtual void log(LogLevel level, char *fmt, ...);
+	virtual void log(LogLevel level, const char *fmt, ...);
 };
 
 

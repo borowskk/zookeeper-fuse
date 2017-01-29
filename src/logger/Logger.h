@@ -44,12 +44,14 @@ public:
 
     ~Logger();
 
-    virtual void log(LogLevel level, char *fmt, ...);
+    virtual void log(LogLevel level, const char *fmt, ...);
 
     virtual void setLogLevel(LogLevel level);
 
     LogLevel getLogLevel();
     
+    virtual string getLogPrefix(LogLevel level);
+
     static Logger::LogLevel stringToLevel(string level) {
         for (int i = ERROR; i <= TRACE; i++) {
             LogLevel retval = static_cast<LogLevel> (i);

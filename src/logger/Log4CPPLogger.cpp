@@ -24,7 +24,7 @@
 #include "Log4CPPLogger.h"
 
 Log4CPPLogger::Log4CPPLogger(Logger::LogLevel& maxLevel) : Logger(maxLevel) {
-    fprintf(stdout, "Log Level Set To: %s for Log4CPP\n", levelToString(maxLevel).c_str());
+    printf("Log Level Set To: %s for Log4CPP\n", levelToString(maxLevel).c_str());
 
     // Configure log4cpp root logger settings.
     log4cpp::Category& rootLog = log4cpp::Category::getRoot();
@@ -52,13 +52,14 @@ Log4CPPLogger::Log4CPPLogger(Logger::LogLevel& maxLevel) : Logger(maxLevel) {
     zkLogger_ = &log4cpp::Category::getInstance(std::string("zkLogger"));
     zkLogger_->addAppender(appender);
 
-    this->log(Logger::DEBUG, "testing LOG4CPP");
+    this->log(Logger::DEBUG, "Using LOG4CPP");
 }
 
 Log4CPPLogger::~Log4CPPLogger() {
+    // TODO: Free appender and layout?
 }
 
-void Log4CPPLogger::log(LogLevel level, char *fmt, ...) {
+void Log4CPPLogger::log(LogLevel level, const char *fmt, ...) {
     char buffer[512];
     
     va_list args;
@@ -66,25 +67,23 @@ void Log4CPPLogger::log(LogLevel level, char *fmt, ...) {
     vsnprintf(buffer, 512, fmt, args);
     va_end(args);
     
-    string out = levelToString(level) + " " + buffer;
-    
     // BEGIN LOG4CPP Logging
     // switch on Logger configurations and adapt them to log4cpp logging functions
     switch (level) {
         case ERROR:
-            zkLogger_->error(out);
+            zkLogger_->error(buffer);
             break;
         case WARNING:
-            zkLogger_->warn(out);
+            zkLogger_->warn(buffer);
             break;
         case INFO:
-            zkLogger_->info(out);
+            zkLogger_->info(buffer);
             break;
         case DEBUG:
-            zkLogger_->debug(out);
+            zkLogger_->debug(buffer);
             break;
         case TRACE:
-            zkLogger_->debug(out);
+            zkLogger_->debug(buffer);
             break;
     }
 }

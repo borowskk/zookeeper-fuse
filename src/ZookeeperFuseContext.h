@@ -100,7 +100,7 @@ private:
     size_t maxFileSize_;
     zhandle_t* handle_;
     boost::lockfree::queue<char> eventQueue_;
-    Logger* logger_;
+    auto_ptr<Logger> logger_;
 };
 
 #endif	/* ZOOCONTEXT_H */

@@ -27,19 +27,13 @@
 #include "logger/Logger.h"
 #include "logger/Log4CPPLogger.h"
 
-ZookeeperFuseContext::ZookeeperFuseContext(Logger::LogLevel maxLevel, const string &hosts, const string &authScheme, const string &auth, 
-                                           const string &path, LeafMode leafMode, size_t maxFileSize):
+ZookeeperFuseContext::ZookeeperFuseContext(Logger::LogLevel maxLevel, const string &hosts, const string &authScheme, const string &auth, const string &path, LeafMode leafMode, size_t maxFileSize):
 hosts_(hosts), authSheme_(authScheme), auth_(auth), path_(path), handle_(NULL), leafMode_(leafMode), maxFileSize_(maxFileSize), eventQueue_(8) {
-
-
 #ifdef HAVE_LOG4CPP
-	Log4CPPLogger * logger = new Log4CPPLogger(maxLevel);
+    logger_.reset(new Log4CPPLogger(maxLevel));
+#else
+    logger_.reset(new Logger(maxLevel));
 #endif
-#ifndef HAVE_LOG4CPP
-	Logger * logger = new Logger(maxLevel);
-#endif
-
-	logger_ = logger;
 }
 
 ZookeeperFuseContext::~ZookeeperFuseContext() {
