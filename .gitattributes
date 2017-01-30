@@ -1,4 +1,5 @@
 compile linguist-vendored
+configure linguist-vendored
 config.guess linguist-vendored
 config.sub linguist-vendored
 depcomp linguist-vendored
