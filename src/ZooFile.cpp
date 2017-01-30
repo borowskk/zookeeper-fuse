@@ -88,12 +88,10 @@ string ZooFile::getContent() const {
         retval = "";
     }
     
-    cout << "getContent() on " << path_ << " content length: " << contentLength << " value: " << string(content, contentLength) << endl;
     return retval;
 }
 
 void ZooFile::setContent(string content) {
-    cout << "setContent() on " << path_ << " content length: " << content.length() << " content: " << content << endl;
     int rc = zoo_set(handle_, path_.c_str(), content.c_str(), content.length(), -1);
     if (rc != ZOK) {
         throw ZooFileException("An error occurred setting the contents of file: " + path_, rc);    

@@ -11,9 +11,11 @@
 1/11/2017 - Logging improvments
 1. Support multiple log levels
 2. Groundwork for eventual syslog support
+1/29/2017 - More logging improvements
+1. Merge log4cpp feature into master
+2. Create a LOG macro
 TODO:
-1. Syslog logging support
-2. Handle session expiration events for zookeeper
-3. Test what happens when a file becomes a directory while mounted (via manual zkCli.sh editing)
-4. Improved zookeeper lib detection in autotools
-5. Add comments
+1. Handle session expiration events for zookeeper
+2. Test what happens when a file becomes a directory while mounted (via manual zkCli.sh editing)
+3. Improved zookeeper lib detection in autotools
+4. Add better comments

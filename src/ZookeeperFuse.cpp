@@ -52,6 +52,9 @@ static int mkdir_callback(const char*, mode_t);
 const static string dataNodeName = "_zoo_data_";
 static struct fuse_operations fuse_zoo_operations;
 
+#define LOG(context, level, msg, ...) \
+    context->getLogger().log(level, msg, __VA_ARGS__)
+
 /*
  * ZookeeperFuse Main Function
  *
@@ -157,9 +160,9 @@ int main(int argc, char** argv) {
 }
 
 static string getFullPath(string path) {
-    ZookeeperFuseContext* zooContext = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
+    ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
     
-    string retval = zooContext->getPath();
+    string retval = context->getPath();
 
     // Avoid duplicate "/" issues at the start of paths
     if (retval == "/") {
@@ -168,10 +171,10 @@ static string getFullPath(string path) {
 
     if (boost::filesystem::path(path).filename() == dataNodeName) {
         retval += boost::filesystem::path(path).parent_path().string();
-        zooContext->getLogger().log(Logger::DEBUG, "Requesting the data node... aliasing to: %s", retval.c_str());        
+        LOG(context, Logger::DEBUG, "Requesting the data node... aliasing to: %s", retval.c_str());        
     } else {
         retval += path;
-        zooContext->getLogger().log(Logger::DEBUG, "Requesting a regular node: %s", retval.c_str());
+        LOG(context, Logger::DEBUG, "Requesting a regular node: %s", retval.c_str());
     }
             
     // Must avoid ending the path in "/" unless we are looking at the root, zookeeper is picky
@@ -183,8 +186,8 @@ static string getFullPath(string path) {
 }
 
 static void callback_init(const string &callback, const string &path) {
-    ZookeeperFuseContext* zooContext = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
-    zooContext->getLogger().log(Logger::DEBUG, "In: %s. Path: %s", callback.c_str(), path.c_str());
+    ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
+    LOG(context, Logger::DEBUG, "In: %s. Path: %s", callback.c_str(), path.c_str());
 }
 
 static int getattr_callback(const char *path, struct stat *stbuf) {
@@ -208,7 +211,7 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
             } else {
                 string content = file.getContent();
                 size_t length = content.length();
-                context->getLogger().log(Logger::DEBUG, "Getting file size for: %s size: %d", getFullPath(path).c_str(), length);
+                LOG(context, Logger::DEBUG, "Getting file size for: %s size: %d", getFullPath(path).c_str(), length);
                 stbuf->st_mode = S_IFREG | 0777;
                 stbuf->st_nlink = 1;
                 stbuf->st_size = length;
@@ -216,14 +219,14 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
             }
         }
     } catch (ZooFileException e) {
-        context->getLogger().log(Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
+        LOG(context, Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
         if (e.getErrorCode() == ZNOAUTH) {
             return -EACCES;  
         } else  {
             return -EIO;
         }
     } catch (ZookeeperFuseContextException e) {
-        context->getLogger().log(Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
+        LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
         return -EIO;
     }
 
@@ -235,7 +238,7 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
     callback_init("readdir_callback", path);
     (void) offset;
     (void) fi;
-    ZookeeperFuseContext* zooContext = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
+    ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
 
     filler(buf, ".", NULL, 0);
     filler(buf, "..", NULL, 0);
@@ -246,16 +249,16 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
         vector<string> children = file.getChildren();
         for (size_t i = 0; i < children.size(); i++) {
             if (dataNodeName == children[i]) {
-                zooContext->getLogger().log(Logger::ERROR, "zookeeper-fuse error: cannot be used on a node which has a child node called %s", dataNodeName.c_str());
+                LOG(context, Logger::ERROR, "zookeeper-fuse error: cannot be used on a node which has a child node called %s", dataNodeName.c_str());
                 return -EIO;
             }
             filler(buf, children[i].c_str(), NULL, 0);
         }
     } catch (ZooFileException e) {
-        zooContext->getLogger().log(Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
+        LOG(context, Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
         return -EIO;
     } catch (ZookeeperFuseContextException e) {
-        zooContext->getLogger().log(Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
+        LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
         return -EIO;
     }
   
@@ -271,13 +274,13 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
         struct fuse_file_info *fi) {
     callback_init("read_callback", path);
     string content;
-    ZookeeperFuseContext* zooContext = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
+    ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
     
     try {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
         content = file.getContent();
     
-        zooContext->getLogger().log(Logger::DEBUG, "Reading from path: %s content: %s", getFullPath(path).c_str(), content.c_str());
+        LOG(context, Logger::DEBUG, "Reading from path: %s content: %s", getFullPath(path).c_str(), content.c_str());
 
         ssize_t len = strlen(content.c_str());
         if (offset >= len) {
@@ -292,10 +295,10 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
 
         memcpy(buf, content.c_str() + offset, size);
     } catch (ZooFileException e) {
-        zooContext->getLogger().log(Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
+        LOG(context, Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
         return -EIO;
     } catch (ZookeeperFuseContextException e) {
-        zooContext->getLogger().log(Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
+        LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
         return -EIO;
     }
 
@@ -310,7 +313,7 @@ int write_callback(const char *path, const char *buf, size_t size, off_t offset,
     
     try {
         if (offset + size > context->getMaxFileSize()) {
-            context->getLogger().log(Logger::ERROR, "Attempting to write past maximum file size of %d", context->getMaxFileSize());
+            LOG(context, Logger::ERROR, "Attempting to write past maximum file size of %d", context->getMaxFileSize());
             return -EINVAL;
         }
 
@@ -320,10 +323,10 @@ int write_callback(const char *path, const char *buf, size_t size, off_t offset,
         content.replace(offset, size, in);
         file.setContent(content);
     } catch (ZooFileException e) {
-        context->getLogger().log(Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
+        LOG(context, Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
         return -EIO;
     } catch (ZookeeperFuseContextException e) {
-        context->getLogger().log(Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
+        LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
         return -EIO;
     }
     
@@ -350,7 +353,7 @@ int create_callback(const char *path, mode_t mode, struct fuse_file_info *fi) {
     ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
     try {
         if (context->getLeafMode() == LEAF_AS_DIR) {
-            context->getLogger().log(Logger::ERROR, "File creation is only allowed via mkdir in LEAF_AS_DIR mode.");
+            LOG(context, Logger::ERROR, "File creation is only allowed via mkdir in LEAF_AS_DIR mode. Path: %s", path);
             return -ENOENT;
         }
 
@@ -360,10 +363,10 @@ int create_callback(const char *path, mode_t mode, struct fuse_file_info *fi) {
             file.create();
         }
     } catch (ZooFileException e) {
-        context->getLogger().log(Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
+        LOG(context, Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
         return -EIO;
     } catch (ZookeeperFuseContextException e) {
-        context->getLogger().log(Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
+        LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
         return -EIO;
     }
 
@@ -372,7 +375,7 @@ int create_callback(const char *path, mode_t mode, struct fuse_file_info *fi) {
 
 int truncate_callback(const char *path, off_t size) {
     callback_init("truncate_callback", path);
-    ZookeeperFuseContext* zooContext = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
+    ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
     
     try {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
@@ -380,10 +383,10 @@ int truncate_callback(const char *path, off_t size) {
         content.resize(size);
         file.setContent(content);
     } catch (ZooFileException e) {
-        zooContext->getLogger().log(Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
+        LOG(context, Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
         return -EIO;
     } catch (ZookeeperFuseContextException e) {
-        zooContext->getLogger().log(Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
+        LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
         return -EIO;
     }
     
@@ -392,16 +395,16 @@ int truncate_callback(const char *path, off_t size) {
 
 int unlink_callback(const char *path) {
     callback_init("unlink_callback", path);
-    ZookeeperFuseContext* zooContext = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
+    ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
     
     try {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
         file.remove();
     } catch (ZooFileException e) {
-        zooContext->getLogger().log(Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
+        LOG(context, Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
         return -EIO;
     } catch (ZookeeperFuseContextException e) {
-        zooContext->getLogger().log(Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
+        LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
         return -EIO;
     }
 
@@ -410,7 +413,7 @@ int unlink_callback(const char *path) {
 
 int mkdir_callback(const char* path, mode_t mode) {
     callback_init("mkdir_callback", path);
-    ZookeeperFuseContext* zooContext = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
+    ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
     
     try {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
@@ -418,10 +421,10 @@ int mkdir_callback(const char* path, mode_t mode) {
             file.create();
         }
     } catch (ZooFileException e) {
-        zooContext->getLogger().log(Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
+        LOG(context, Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
         return -EIO;
     } catch (ZookeeperFuseContextException e) {
-        zooContext->getLogger().log(Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
+        LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
         return -EIO;
     }
 
