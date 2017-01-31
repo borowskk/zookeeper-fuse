@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
                         "--zooHosts          -s          zookeeper servers to which to connect\n"
                         "--zooAuthScheme     -A          zookeeper authentication scheme (i.e. digest)\n"
                         "--zooAuthentication -a          zookeeper authentication string\n"
-                        "--leafMode          -l          display mode for leaves, DIR or FILE(default)\n"
+                        "--leafMode          -l          display mode for leaves, DIR or FILE (default=DIR)\n"
                         "--maxFileSize       -m          maximum size in bytes of file in the zoo (default=1024)\n"
                         "--logLevel          -d          verbosity of logging ERROR, WARNING, INFO, DEBUG, TRACE\n";
                 exit(0);
@@ -128,7 +128,7 @@ int main(int argc, char** argv) {
                 zooAuthentication = optarg;
                 break;
             case 'l':
-                leafMode = (optarg != "FILE") ? LEAF_AS_DIR : LEAF_AS_FILE;
+                leafMode = (string(optarg) != "FILE") ? LEAF_AS_DIR : LEAF_AS_FILE;
                 break;
             case 'm':
                 maxFileSize = atoi(optarg);
