@@ -282,7 +282,7 @@ static int read_callback(const char *path, char *buf, size_t size, off_t offset,
     
         LOG(context, Logger::DEBUG, "Reading from path: %s content: %s", getFullPath(path).c_str(), content.c_str());
 
-        ssize_t len = strlen(content.c_str());
+        ssize_t len = content.size();
         if (offset >= len) {
             return 0;
         }
