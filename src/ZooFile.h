@@ -74,7 +74,8 @@ public:
     
     void setContent(string);
     void create();
-    
+    size_t getLength() const;
+
 private:
     zhandle_t* handle_;
     const string path_;

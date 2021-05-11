@@ -105,6 +105,10 @@ void ZooFile::create() {
     }      
 }
 
+size_t ZooFile::getLength() const {
+    return (getContent().length());
+}
+
 void ZooFile::remove() {
     int rc = zoo_delete(handle_, path_.c_str(), -1);
     if (rc != ZOK) {

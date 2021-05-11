@@ -3,3 +3,4 @@
 *.o
 **/.deps
 **/.dirstamp
+.idea/

@@ -19,6 +19,9 @@ Limitations:
   - Displaying Leaf Nodes: In the Zookeeper, even directories can have contents. An aspect which is difficult to represent within the constraints of a fuse filesystem. As such, two leaf display modes are supported: DIR and FILE. In both modes the contents of directories are stored in special "_zoo_data_" files. The differences between the display modes are as follows:
     1. DIR: Display all leaf nodes as directories, has the side-effect that new files can only be created using mkdir.
     2. FILE: Display all leaf nodes as files, has the side-effect that directories cannot be created.
+    3. HYBRID: Empty nodes are shown as directories. Other nodes, that are leaves, are shown as files.
+        This mode best translates itself to a OS-like filesystem.
+        In hybrid mode chmod is always 0777.
   - mv is not yet implemented in any leaf display mode
   - cp is not fully supported...
     - When leaf display mode is FILE, files can be copied accurately but directories aren't

@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
                         "--zooHosts          -s          zookeeper servers to which to connect\n"
                         "--zooAuthScheme     -A          zookeeper authentication scheme (i.e. digest)\n"
                         "--zooAuthentication -a          zookeeper authentication string\n"
-                        "--leafMode          -l          display mode for leaves, DIR or FILE (default=DIR)\n"
+                        "--leafMode          -l          display mode for leaves, DIR or FILE (default=DIR) or HYBRID\n"
                         "--maxFileSize       -m          maximum size in bytes of file in the zoo (default=1024)\n"
                         "--logLevel          -d          verbosity of logging ERROR, WARNING, INFO, DEBUG, TRACE\n";
                 exit(0);
@@ -128,7 +128,7 @@ int main(int argc, char** argv) {
                 zooAuthentication = optarg;
                 break;
             case 'l':
-                leafMode = (string(optarg) != "FILE") ? LEAF_AS_DIR : LEAF_AS_FILE;
+                leafMode = (string(optarg) != "FILE") ? ((string(optarg) != "DIR") ? LEAF_AS_HYBRID : LEAF_AS_DIR) : LEAF_AS_FILE;
                 break;
             case 'm':
                 maxFileSize = atoi(optarg);
@@ -199,6 +199,18 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
         if (file.exits()) {
             bool isDir = file.isDir();
+            if (context->getLeafMode() == LEAF_HYBRID) {
+                size_t len = file.getLength();
+                if (len == 0) {
+                    stbuf->st_mode = S_IFDIR | 0755;
+                    stbuf->st_nlink = 2;
+                } else {
+                    stbuf->st_mode = S_IFREG | 0755;
+                    stbuf->st_nlink = 1;
+                    stbuf->st_size = len;
+                }
+                return 0;
+            }
             if (context->getLeafMode() == LEAF_AS_DIR) {
                 // In LEAF_AS_DIR mode, override to make all nodes directories except the special data nodes
                 isDir = boost::filesystem::path(path).filename() != dataNodeName;
@@ -209,8 +221,7 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
                 stbuf->st_nlink = 2;
                 return 0;
             } else {
-                string content = file.getContent();
-                size_t length = content.length();
+                size_t length = file.getLength();
                 LOG(context, Logger::DEBUG, "Getting file size for: %s size: %d", getFullPath(path).c_str(), length);
                 stbuf->st_mode = S_IFREG | 0777;
                 stbuf->st_nlink = 1;
