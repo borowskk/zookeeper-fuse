@@ -221,7 +221,9 @@ static string getFullPath_c(const string & path) {
 static void reread_symlinks();
 static void zookeeper_watcher(zhandle_t *zh, int type, int state, const char *path,void *watcherCtx) {
     // If we've got a watch, that can mean that __symlinks__ has just been altered
-    reread_symlinks();
+    if (type == ZOO_CHANGED_EVENT) {
+        reread_symlinks();
+    }
 }
 
 /**
