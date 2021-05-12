@@ -21,7 +21,7 @@
 
 #ifndef ZOOFILE_H
 #define	ZOOFILE_H
-
+#define DBOOST_STACKTRACE_USE_ADDR2LINE
 #include <vector>
 #include <string>
 #include <exception>

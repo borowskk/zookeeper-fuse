@@ -245,6 +245,8 @@ static void store_symlinks() {
 
 static void reread_symlinks() {
     ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
+    // This will always succeed
+    zoo_set_watcher(context->getZookeeperHandle(), &zookeeper_watcher);
     try {
         // Read symlinks and register a watch for it
         if (context->getLeafMode() != LEAF_AS_HYBRID) {
@@ -256,6 +258,9 @@ static void reread_symlinks() {
             symlinks.create();
         }
         string content = symlinks.getContentAndSetWatch();
+        if (content.length() == 0) {
+            return;
+        }
         boost::split(symlinks_pairs, content, boost::is_any_of("\x0A"));
         // There is no hazard here since or FUSE is single threaded.
         // @todo can anyone confirm the above?
@@ -263,16 +268,19 @@ static void reread_symlinks() {
         for (vector<string>::iterator it = symlinks_pairs.begin(); it != symlinks_pairs.end(); it++) {
             vector<string> symlink_pairs_t;
             boost::split(symlink_pairs_t, *it, boost::is_any_of("="));
+            if (symlink_pairs_t.size() < 2) {
+                throw std::exception(); // invalid symlink description
+            }
             string symlink = symlink_pairs_t[0];
             string pointing_at = symlink_pairs_t[1];
             global_symlinks[symlink] = pointing_at;
         }
-        // This will always succeed
-        zoo_set_watcher(context->getZookeeperHandle(), &zookeeper_watcher);
     } catch (ZooFileException e) {
         LOG(context, Logger::ERROR, "ZooFileException re-reading symlinks %s (%d)", e.what(), e.getErrorCode());
     } catch (ZookeeperFuseContextException e) {
         LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error while re-reading symlinks: %d", e.getErrorCode());
+    } catch (std::exception e) {
+        cout << "Exception" << endl;
     }
 }
 
@@ -284,6 +292,7 @@ static void callback_init(const string &callback, const string &path) {
 
 /** Create a symbolic link */
 static int symlink_callback(const char * path_to, const char * path_from) {
+    callback_init("symlink_callback", path_to);
     string s_path_to(path_to), s_path_from(path_from);
     global_symlinks[s_path_from] = s_path_to;
     store_symlinks();
@@ -291,6 +300,7 @@ static int symlink_callback(const char * path_to, const char * path_from) {
 }
 
 static int readlink_callback(const char * path, char * out, size_t buf_size) {
+    callback_init("readlink_callback", path);
     ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
     string s_path(path);
     unordered_map<string, string>::iterator it = global_symlinks.find(s_path);

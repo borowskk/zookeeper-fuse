@@ -38,6 +38,7 @@ Required Packages for compilation:
  - libzookeeper-mt-dev
  - libfuse-dev 
  - zookeeper
+ - libboost-filesystem-dev
 
 Optional Packages:
  - liblog4cpp5-dev
