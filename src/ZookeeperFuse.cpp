@@ -180,7 +180,7 @@ static string getFullPath(string path) {
         retval = "";
     }
 
-    if (context->getLeafMode() != LEAF_AS_HYBRID) && (boost::filesystem::path(path).filename() == dataNodeName) {
+    if ((context->getLeafMode() != LEAF_AS_HYBRID) && (boost::filesystem::path(path).filename() == dataNodeName)) {
         retval += boost::filesystem::path(path).parent_path().string();
         LOG(context, Logger::DEBUG, "Requesting the data node... aliasing to: %s", retval.c_str());        
     } else {
@@ -210,18 +210,7 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
         if (file.exits()) {
             bool isDir = file.isDir();
-            if (context->getLeafMode() == LEAF_AS_HYBRID) {
-                size_t len = file.getLength();
-                if (len == 0) {
-                    stbuf->st_mode = S_IFDIR | 0755;
-                    stbuf->st_nlink = 2;
-                } else {
-                    stbuf->st_mode = S_IFREG | 0755;
-                    stbuf->st_nlink = 1;
-                    stbuf->st_size = len;
-                }
-                return 0;
-            }
+
             if (context->getLeafMode() == LEAF_AS_DIR) {
                 // In LEAF_AS_DIR mode, override to make all nodes directories except the special data nodes
                 isDir = boost::filesystem::path(path).filename() != dataNodeName;
