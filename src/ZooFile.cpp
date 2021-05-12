@@ -64,6 +64,9 @@ bool ZooFile::isDir() const {
         return !getChildren().empty();
     }
 
+    if (path_ == "/") {
+        return true;
+    }
     if (for_sure_files.find(path_) == for_sure_files.end()) {
         if (for_sure_directories.find(path_) == for_sure_directories.end()) {
             // If it is empty...

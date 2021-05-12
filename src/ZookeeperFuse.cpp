@@ -67,6 +67,13 @@ static struct fuse_operations fuse_zoo_operations;
  *                   Has the side-effect of not being able to create new leaf nodes except via mkdir
  * 2. LEAF_AS_FILE - Display all leaf nodes as files
  *                   Has the side-effect of not being able to add child files or folders to leaf nodes
+ * 3. LEAF_AS_HYBRID -
+ *      1. / is always a directory
+ *      2. If I've seen a mkdir() on that, it's a directory
+ *      3. If I've seen an open() or create() on that, it's a file
+ *      4. If it has any children, it's a directory
+ *      5. If it does not have any content, it's a directory
+ *      6. If it does have content, it's a file
  */
 int main(int argc, char** argv) {
     string zooHosts;
