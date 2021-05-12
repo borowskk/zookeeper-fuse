@@ -212,7 +212,7 @@ static string getFullPath(const char * path) {
     return s_path;
 }
 
-static string getFullPath_c(const string & path) {
+static string getFullPath_c(const string path) {
     string s_path(path);
     s_path = getFullPath(s_path);
     return s_path;
@@ -239,7 +239,7 @@ static void store_symlinks() {
             out << "\x0A";
         }
     }
-    ZooFile symlinks(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(symlinkNodeNameWithPath));
+    ZooFile symlinks(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath_c(symlinkNodeNameWithPath));
     symlinks.setContent(out.str());
 }
 
