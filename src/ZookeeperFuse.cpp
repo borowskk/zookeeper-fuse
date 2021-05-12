@@ -69,7 +69,7 @@ static struct fuse_operations fuse_zoo_operations;
  * Registers the fuse callbacks.
  * Creates the zookeeper connection/context.
  * 
- * Two display modes are supported for leaf nodes, each has its quirks
+ * Three display modes are supported for leaf nodes, each has its quirks
  * 1. LEAF_AS_DIR  - Display all leaf nodes as directories, make their data available in a special child data node
  *                   Has the side-effect of not being able to create new leaf nodes except via mkdir
  * 2. LEAF_AS_FILE - Display all leaf nodes as files
@@ -82,6 +82,8 @@ static struct fuse_operations fuse_zoo_operations;
  *      5. If it does not have any content, it's a directory
  *      6. If it does have content, it's a file
  */
+static void reread_symlinks();
+
 int main(int argc, char** argv) {
     string zooHosts;
     string zooAuthScheme;
@@ -177,9 +179,13 @@ int main(int argc, char** argv) {
     if (leafMode == LEAF_AS_HYBRID) {
         enableHybridMode();
     }
-
     return fuse_main(argumentDivider, argv, &fuse_zoo_operations, context.get());
 }
+
+/**
+ * If this flag is false, then next time that FUSE is invoked symlinks will be re-readed.
+ */
+bool were_symlinks_readed = false;
 
 static string getFullPath(string path) {
     ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
@@ -218,11 +224,19 @@ static string getFullPath_c(const string path) {
     return s_path;
 }
 
-static void reread_symlinks();
+static void callback_init(const string &callback, const string &path) {
+    ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
+    LOG(context, Logger::DEBUG, "In: %s. Path: %s", callback.c_str(), path.c_str());
+    if (!were_symlinks_readed) {
+        reread_symlinks();
+        were_symlinks_readed = true;
+    }
+}
+
 static void zookeeper_watcher(zhandle_t *zh, int type, int state, const char *path,void *watcherCtx) {
     // If we've got a watch, that can mean that __symlinks__ has just been altered
     if (type == ZOO_CHANGED_EVENT) {
-        reread_symlinks();
+        were_symlinks_readed = false;       // force a re-read of symlinks next time FUSE is invoked
     }
 }
 
@@ -231,6 +245,8 @@ static void zookeeper_watcher(zhandle_t *zh, int type, int state, const char *pa
  * @return
  */
 static void store_symlinks() {
+    callback_init("store_symlinks", "");
+    ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
     ostringstream out;
     for (unordered_map<string, string>::iterator it = global_symlinks.begin(); it != global_symlinks.end(); it++) {
         out << it->first << "=" << it->second;
@@ -246,7 +262,7 @@ static void store_symlinks() {
 static void reread_symlinks() {
     ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
     // This will always succeed
-    zoo_set_watcher(context->getZookeeperHandle(), &zookeeper_watcher);
+    zoo_set_watcher(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), &zookeeper_watcher);
     try {
         // Read symlinks and register a watch for it
         if (context->getLeafMode() != LEAF_AS_HYBRID) {
@@ -279,16 +295,9 @@ static void reread_symlinks() {
         LOG(context, Logger::ERROR, "ZooFileException re-reading symlinks %s (%d)", e.what(), e.getErrorCode());
     } catch (ZookeeperFuseContextException e) {
         LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error while re-reading symlinks: %d", e.getErrorCode());
-    } catch (std::exception e) {
-        cout << "Exception" << endl;
     }
 }
 
-static void callback_init(const string &callback, const string &path) {
-    ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
-    LOG(context, Logger::DEBUG, "In: %s. Path: %s", callback.c_str(), path.c_str());
-    reread_symlinks();
-}
 
 /** Create a symbolic link */
 static int symlink_callback(const char * path_to, const char * path_from) {
@@ -310,9 +319,8 @@ static int readlink_callback(const char * path, char * out, size_t buf_size) {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
         if (!file.exists()) {
             return -ENOENT;
-        } else {
-            return -EINVAL;
         }
+        return -EINVAL;
     }
     string& second_str = it->second;
     if (buf_size-1 > second_str.length()) {
@@ -325,7 +333,6 @@ static int readlink_callback(const char * path, char * out, size_t buf_size) {
 
 
 static int getattr_callback(const char *path, struct stat *stbuf) {
-    callback_init("getattr_callback", path);
     memset(stbuf, 0, sizeof (struct stat));
     ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
     string s_path(path);
@@ -385,6 +392,15 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
     filler(buf, "..", NULL, 0);
     if (context->getLeafMode() != LEAF_AS_HYBRID) {
         filler(buf, dataNodeName.c_str(), NULL, 0);
+    } else {        // if leaf mode is HYBRID
+        boost::filesystem::path parent(path);
+        // Check if there are any children among symlinks
+        for (unordered_map<string, string>::iterator it = global_symlinks.begin(); it != global_symlinks.end(); it++) {
+            boost::filesystem::path child_path(it->first);
+            if (child_path.parent_path() == parent) {
+                filler(buf, child_path.filename().c_str(), NULL, 0);
+            }
+        }
     }
     try {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));

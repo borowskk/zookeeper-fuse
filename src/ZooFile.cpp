@@ -141,7 +141,7 @@ string ZooFile::getContent() const {
     } else {
         retval = "";
     }
-    
+
     return retval;
 }
 

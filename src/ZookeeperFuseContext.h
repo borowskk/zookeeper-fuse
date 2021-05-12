@@ -104,5 +104,6 @@ private:
     auto_ptr<Logger> logger_;
 };
 
+static void zkWatcher(zhandle_t *zh, int type, int state, const char *path, void *watcherCtx);
 #endif	/* ZOOCONTEXT_H */
 

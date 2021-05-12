@@ -122,6 +122,7 @@ ZookeeperFuseContext* ZookeeperFuseContext::getZookeeperFuseContext(fuse_context
     throw ZookeeperFuseContextException("Could not get the zookeeper context from fuse", ZINVALIDSTATE);
 }
 
+
 zhandle_t* ZookeeperFuseContext::getZookeeperHandle(fuse_context* context) {
     ZookeeperFuseContext* zooContext = getZookeeperFuseContext(context);
     zhandle_t* retval = zooContext->getZookeeperHandle();

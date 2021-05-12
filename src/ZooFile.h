@@ -73,6 +73,10 @@ public:
     vector<string> getChildren() const;
     string getContent() const;
     void remove();
+    /**
+     * This is ever only called in LEAF_AS_HYBRID mode, and the only watch is then set is
+     * for /__symlinks__
+     */
     string getContentAndSetWatch() const;
     void setContent(string);
     void create();
