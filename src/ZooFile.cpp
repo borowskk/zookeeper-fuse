@@ -22,10 +22,21 @@
 #include <string.h>
 #include <string>
 #include <iostream>
-
+#include <unordered_set>
 #include "ZooFile.h"
 
+unordered_set<string> for_sure_files, for_sure_directories;
+
 const size_t ZooFile::MAX_FILE_SIZE = 4096;
+bool is_hybrid_mode = false;
+
+void ZooFile::markAsDirectory() const {
+    for_sure_directories.insert(path_);
+}
+void ZooFile::markAsFile() const {
+    for_sure_files.insert(path_);
+}
+
 
 ZooFile::ZooFile(zhandle_t* handle, const string &path) :
 handle_(handle),
@@ -49,7 +60,25 @@ bool ZooFile::exits() const {
 }
 
 bool ZooFile::isDir() const {
-    return !getChildren().empty();
+    if (!is_hybrid_mode) {
+        return !getChildren().empty();
+    }
+
+    if (for_sure_files.find(path_) == for_sure_files.end()) {
+        if (for_sure_directories.find(path_) == for_sure_directories.end()) {
+            // If it is empty...
+            if (getChildren().empty()) {
+                // If it has any content
+                return (getLength() == 0);
+            } else {
+                return false;
+            }
+        } else {
+            return true;
+        }
+    } else {
+        return false;
+    }
 }
 
 vector<string> ZooFile::getChildren() const {
@@ -113,5 +142,11 @@ void ZooFile::remove() {
     int rc = zoo_delete(handle_, path_.c_str(), -1);
     if (rc != ZOK) {
         throw ZooFileException("An error occurred deleting the file: " + path_, rc);
-    }         
+    }
+    for_sure_files.erase(path_);
+    for_sure_directories.erase(path_);
+}
+
+void enableHybridMode() {
+    is_hybrid_mode = true;
 }

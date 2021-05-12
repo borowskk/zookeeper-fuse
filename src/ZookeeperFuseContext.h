@@ -37,7 +37,7 @@ using namespace boost;
 enum LeafMode {
     LEAF_AS_DIR,
     LEAF_AS_FILE,
-    LEAF_HYBRID
+    LEAF_AS_HYBRID
 };
 
 class ZookeeperFuseContextException : public std::exception {

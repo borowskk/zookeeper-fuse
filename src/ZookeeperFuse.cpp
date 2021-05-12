@@ -155,7 +155,11 @@ int main(int argc, char** argv) {
     
     auto_ptr<ZookeeperFuseContext> context(
         new ZookeeperFuseContext(logLevel, zooHosts, zooAuthScheme, zooAuthentication, zooPath, leafMode, maxFileSize));
-    
+
+    if (leafMode == LEAF_AS_HYBRID) {
+        enableHybridMode();
+    }
+
     return fuse_main(argumentDivider, argv, &fuse_zoo_operations, context.get());
 }
 
@@ -169,7 +173,7 @@ static string getFullPath(string path) {
         retval = "";
     }
 
-    if (boost::filesystem::path(path).filename() == dataNodeName) {
+    if (context->getLeafMode() != LEAF_AS_HYBRID) && (boost::filesystem::path(path).filename() == dataNodeName) {
         retval += boost::filesystem::path(path).parent_path().string();
         LOG(context, Logger::DEBUG, "Requesting the data node... aliasing to: %s", retval.c_str());        
     } else {
@@ -199,7 +203,7 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
         if (file.exits()) {
             bool isDir = file.isDir();
-            if (context->getLeafMode() == LEAF_HYBRID) {
+            if (context->getLeafMode() == LEAF_AS_HYBRID) {
                 size_t len = file.getLength();
                 if (len == 0) {
                     stbuf->st_mode = S_IFDIR | 0755;
@@ -253,13 +257,15 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 
     filler(buf, ".", NULL, 0);
     filler(buf, "..", NULL, 0);
-    filler(buf, dataNodeName.c_str(), NULL, 0);
+    if (context->getLeafMode() != LEAF_AS_HYBRID) {
+        filler(buf, dataNodeName.c_str(), NULL, 0);
+    }
     try {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
 
         vector<string> children = file.getChildren();
         for (size_t i = 0; i < children.size(); i++) {
-            if (dataNodeName == children[i]) {
+            if ((context->getLeafMode() != LEAF_AS_HYBRID) && (dataNodeName == children[i])) {
                 LOG(context, Logger::ERROR, "zookeeper-fuse error: cannot be used on a node which has a child node called %s", dataNodeName.c_str());
                 return -EIO;
             }
@@ -278,6 +284,27 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
 
 static int open_callback(const char *path, struct fuse_file_info *fi) {
     callback_init("open_callback", path);
+    ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
+
+    if (context->getLeafMode() != LEAF_AS_HYBRID) {
+        return 0;
+    }
+
+    try {
+        ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
+
+        if (!file.exits()) {
+            file.create();
+            file.markAsFile();
+        }
+    } catch (ZooFileException e) {
+        LOG(context, Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
+        return -EIO;
+    } catch (ZookeeperFuseContextException e) {
+        LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
+        return -EIO;
+    }
+
     return 0;
 }
 
@@ -372,6 +399,7 @@ int create_callback(const char *path, mode_t mode, struct fuse_file_info *fi) {
 
         if (!file.exits()) {
             file.create();
+            file.markAsFile();
         }
     } catch (ZooFileException e) {
         LOG(context, Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
@@ -430,6 +458,7 @@ int mkdir_callback(const char* path, mode_t mode) {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
         if (!file.exits()) {
             file.create();
+            file.markAsDirectory();
         }
     } catch (ZooFileException e) {
         LOG(context, Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());

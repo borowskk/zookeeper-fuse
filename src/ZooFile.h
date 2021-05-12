@@ -67,7 +67,10 @@ public:
     
     bool exits() const;
     bool isDir() const;
-    
+
+    void markAsDirectory() const;
+    void markAsFile() const;
+
     vector<string> getChildren() const;
     string getContent() const;
     void remove();
@@ -80,6 +83,9 @@ private:
     zhandle_t* handle_;
     const string path_;
 };
+
+
+void enableHybridMode();
 
 #endif	/* ZOOFILE_H */
 

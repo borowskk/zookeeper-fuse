@@ -1,3 +1,4 @@
+# zookeeper-fuse
 The zookeeper-fuse project is a libfuse compatible userspace filesystem backended by zookeeper. It allows a user to mount the entire zoo or a specific node within the zoo as a filesystem.
 
 Features:
@@ -7,13 +8,17 @@ Features:
   - Supports authentication
 
 Building:
-  autoreconf -fi
-  ./configure
-  make
-  make install
+
+* autoreconf -fi
+* ./configure
+* make
+* make install
 
 Mounting:
-  zookeper-fuse /mnt/zoo -- --zooHosts localhost:2181
+
+```bash
+zookeper-fuse /mnt/zoo -- --zooHosts localhost:2181
+```
 
 Limitations:
   - Displaying Leaf Nodes: In the Zookeeper, even directories can have contents. An aspect which is difficult to represent within the constraints of a fuse filesystem. As such, two leaf display modes are supported: DIR and FILE. In both modes the contents of directories are stored in special "_zoo_data_" files. The differences between the display modes are as follows:
@@ -22,11 +27,11 @@ Limitations:
     3. HYBRID: Empty nodes are shown as directories. Other nodes, that are leaves, are shown as files.
         This mode best translates itself to a OS-like filesystem.
         In hybrid mode chmod is always 0777.
+        / will always be a directory.
   - mv is not yet implemented in any leaf display mode
   - cp is not fully supported...
     - When leaf display mode is FILE, files can be copied accurately but directories aren't
     - When leaf display mode is DIR, nodes are created but contents aren't copied
-
 
 For development using Ubuntu 16.04 (Xenial Xerus)
 Required Packages for compilation:
@@ -42,3 +47,26 @@ Zookeeper Package:
 
 Useful packages for testing and debugging:
  - zooinspector
+
+# Hybrid mode
+
+The problem with current DIR and FILE mode is that zookeeper-fuse forgets what it has created
+right after it's creation, which poses some problems when trying to mount a ZooKeeper directory
+as a filesystem.
+
+HYBRID mode makes use of caching in order to remember whether the file you just
+created is a normal file, or a directory, permitting usage of ZooKeeper more like a standard filesystem.
+
+Note that *cache will be enabled ONLY in hybrid mode*.
+
+However, this applies just to a single machine running zookeeper-fuse from the same volume, if a single machine is
+to create a file, it will be still visible to another machine as a directory, so take care of that.
+
+However, until cache eviction is implemented, your instance of zookeeper-fuse might grow unbounded in memory,
+especially *when you process files with different names*.
+
+Note that in hybrid mode data contained in nodes that have children is just flat out inaccessible.
+
+If you keep on processing files with the same names, it should be OK.
+
+But tl;dr - ZooKeeper systems are usable as a normal filesystem in HYBRID mode.
