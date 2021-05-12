@@ -30,7 +30,6 @@
 #include <zookeeper/zookeeper.h>
 
 using namespace std;
-using namespace boost;
 
 class ZooFileException : public std::exception {
 public:
