@@ -65,7 +65,7 @@ public:
     ZooFile(const ZooFile& orig);
     virtual ~ZooFile();
     
-    bool exits() const;
+    bool exists() const;
     bool isDir() const;
 
     void markAsDirectory() const;

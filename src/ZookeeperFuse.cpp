@@ -208,7 +208,7 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
     
     try {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
-        if (file.exits()) {
+        if (file.exists()) {
             bool isDir = file.isDir();
 
             if (context->getLeafMode() == LEAF_AS_DIR) {
@@ -289,7 +289,7 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
     try {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
 
-        if (!file.exits()) {
+        if (!file.exists()) {
             file.create();
             file.markAsFile();
         }
@@ -393,7 +393,7 @@ int create_callback(const char *path, mode_t mode, struct fuse_file_info *fi) {
 
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
 
-        if (!file.exits()) {
+        if (!file.exists()) {
             file.create();
             file.markAsFile();
         }
@@ -452,7 +452,7 @@ int mkdir_callback(const char* path, mode_t mode) {
     
     try {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
-        if (!file.exits()) {
+        if (!file.exists()) {
             file.create();
             file.markAsDirectory();
         }

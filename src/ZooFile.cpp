@@ -48,7 +48,7 @@ ZooFile::~ZooFile() {
 
 }
 
-bool ZooFile::exits() const {
+bool ZooFile::exists() const {
     int rc = zoo_exists(handle_, path_.c_str(), 0, NULL);
     if (rc == ZNONODE) {
         return false;
@@ -73,15 +73,12 @@ bool ZooFile::isDir() const {
             if (getChildren().empty()) {
                 // If it has any content
                 return (getLength() == 0);
-            } else {
-                return false;
             }
-        } else {
-            return true;
+            return false;
         }
-    } else {
-        return false;
+        return true;
     }
+    return false;
 }
 
 vector<string> ZooFile::getChildren() const {
