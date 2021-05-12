@@ -74,7 +74,7 @@ public:
     vector<string> getChildren() const;
     string getContent() const;
     void remove();
-    
+    string getContentAndSetWatch() const;
     void setContent(string);
     void create();
     size_t getLength() const;

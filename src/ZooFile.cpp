@@ -30,6 +30,31 @@ unordered_set<string> for_sure_files, for_sure_directories;
 const size_t ZooFile::MAX_FILE_SIZE = 4096;
 bool is_hybrid_mode = false;
 
+
+string ZooFile::getContentAndSetWatch() const {
+
+    Stat stat;
+    char content[MAX_FILE_SIZE];
+    int contentLength = MAX_FILE_SIZE;
+
+    memset( content, 0, MAX_FILE_SIZE );
+    memset( &stat, 0, sizeof(stat) );
+
+    int rc = zoo_get(handle_, path_.c_str(), 1, content, &contentLength, &stat);
+    if (rc != ZOK) {
+        throw ZooFileException("An error occurred getting the contents of file: " + path_, rc);
+    }
+
+    string retval;
+    if (contentLength > 0) {
+            retval = string(content, contentLength);
+        } else {
+            retval = "";
+    }
+
+    return retval;
+
+}
 void ZooFile::markAsDirectory() const {
     for_sure_directories.insert(path_);
 }

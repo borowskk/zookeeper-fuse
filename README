@@ -48,7 +48,8 @@ Zookeeper Package:
 Useful packages for testing and debugging:
  - zooinspector
 
-# Hybrid mode
+Hybrid mode
+===========
 
 The problem with current DIR and FILE mode is that zookeeper-fuse forgets what it has created
 right after it's creation, which poses some problems when trying to mount a ZooKeeper directory
@@ -70,3 +71,14 @@ Note that in hybrid mode data contained in nodes that have children is just flat
 If you keep on processing files with the same names, it should be OK.
 
 But tl;dr - ZooKeeper systems are usable as a normal filesystem in HYBRID mode.
+
+Symlinks
+--------
+
+Symlinks are supported in the HYBRID mode. Put simply, zookeeper-fuse creates a file
+called __symlinks__ in the root of your ZooKeeper mounting point and stores there
+names of files <name of symlink>=<name of the file that it points to>LF.
+
+It also registers a watch, so that if it is changed by another, zookeeper-fuse will know.
+
+Note that in HYBRID mode __symlinks__ becomes an invalid file name.
