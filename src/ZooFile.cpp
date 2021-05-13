@@ -56,13 +56,21 @@ string ZooFile::getContentAndSetWatch() const {
     return retval;
 
 }
+
 void ZooFile::markAsDirectory() const {
-    for_sure_directories.insert(path_);
+    unordered_set<string>::iterator it = for_sure_files.find(path_);
+    if (it == for_sure_files.end()) {
+        // Ie. it's not a file
+        for_sure_directories.insert(path_);
+    }
 }
 void ZooFile::markAsFile() const {
-    for_sure_files.insert(path_);
+    unordered_set<string>::iterator it = for_sure_directories.find(path_);
+    if (it == for_sure_directories.end()) {
+        // Ie. it's not a directory
+        for_sure_files.insert(path_);
+    }
 }
-
 
 ZooFile::ZooFile(zhandle_t* handle, const string &path) :
 handle_(handle),

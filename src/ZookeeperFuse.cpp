@@ -57,6 +57,7 @@ static int lock_callback(const char * path, struct fuse_file_info * info, int cm
 static int flock_callback(const char * path, struct fuse_file_info * info, int op);
 static int releasedir_callback(const char * path, struct fuse_file_info * info);
 static int release_callback(const char * path, struct fuse_file_info * info);
+static int opendir_callback(const char * path, struct fuse_file_info * info);
 
 
 
@@ -168,6 +169,7 @@ int main(int argc, char** argv) {
         fuse_zoo_operations.flock = flock_callback;
         fuse_zoo_operations.release = release_callback;
         fuse_zoo_operations.releasedir = releasedir_callback;
+        fuse_zoo_operations.opendir = opendir_callback;
     }
     fuse_zoo_operations.getattr = getattr_callback;
     fuse_zoo_operations.open = open_callback;
@@ -319,6 +321,7 @@ static int release_callback(const char * path, struct fuse_file_info * info) {
 
 static int lock_callback(const char * path, struct fuse_file_info * info, int cmd, struct flock * flock_s) {
     callback_init("lock_callback", path);
+    ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
 
     try {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
@@ -338,17 +341,40 @@ static int lock_callback(const char * path, struct fuse_file_info * info, int cm
     return 0;
 }
 
-
-static int flock_callback(const char * path, struct fuse_file_info * info, int op) {
-    callback_init("flock_callback", path);
+static int opendir_callback(const char * path, struct fuse_file_info * info) {
+    callback_init("opendir_callback", path);
+    ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
 
     try {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
 
         if (!file.exists()) {
             file.create();
-            file.markAsFile();
         }
+        file.markAsDirectory();
+    } catch (ZooFileException e) {
+        LOG(context, Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
+        return -EIO;
+    } catch (ZookeeperFuseContextException e) {
+        LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
+        return -EIO;
+    }
+
+    return 0;
+
+}
+
+static int flock_callback(const char * path, struct fuse_file_info * info, int op) {
+    callback_init("flock_callback", path);
+    ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
+
+    try {
+        ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
+
+        if (!file.exists()) {
+            file.create();
+        }
+        file.markAsFile();
     } catch (ZooFileException e) {
         LOG(context, Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
         return -EIO;
@@ -502,8 +528,8 @@ static int open_callback(const char *path, struct fuse_file_info *fi) {
 
         if (!file.exists()) {
             file.create();
-            file.markAsFile();
         }
+        file.markAsFile();
     } catch (ZooFileException e) {
         LOG(context, Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
         return -EIO;

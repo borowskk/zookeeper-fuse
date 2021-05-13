@@ -84,13 +84,13 @@ It also registers a watch, so that if it is changed by another, zookeeper-fuse w
 
 Note that in HYBRID mode __symlinks__ becomes an invalid file name.
 
-Locking files
--------------
+Other syscalls
+--------------
 
 `lock()` and `flock()` are no-ops (only in HYBRID mode).
 They will create a file if it doesn't exist.
 
-
-Release
--------
 `release()` and `releasedir()` are available in HYBRID mode, they are simply no-ops.
+
+`opendir()` is available in HYBRID mode. It is a "if that file does not exist",
+make it a directory. It will also mark any unmarked file as a directory.
