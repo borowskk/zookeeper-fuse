@@ -279,7 +279,6 @@ static void reread_symlinks() {
         }
         boost::split(symlinks_pairs, content, boost::is_any_of("\x0A"));
         // There is no hazard here since or FUSE is single threaded.
-        // @todo can anyone confirm the above?
         global_symlinks.clear();
         for (vector<string>::iterator it = symlinks_pairs.begin(); it != symlinks_pairs.end(); it++) {
             vector<string> symlink_pairs_t;

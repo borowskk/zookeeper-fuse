@@ -25,6 +25,7 @@
 #include <unordered_set>
 #include "ZooFile.h"
 
+// @todo add cache invalidation. Now the entries are kept for all eternity
 unordered_set<string> for_sure_files, for_sure_directories;
 
 const size_t ZooFile::MAX_FILE_SIZE = 4096;
