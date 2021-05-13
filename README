@@ -95,4 +95,5 @@ They will create a file if it doesn't exist.
 `opendir()` is available in HYBRID mode. It is a "if that file does not exist",
 make it a directory. It will also mark any unmarked file as a directory.
 
-`access()` is available only in HYBRID mode and will always return OK.
+`access()` is available only in HYBRID mode and will always return OK for existing
+files and symlinks and ENOTENT for those that do not exist.

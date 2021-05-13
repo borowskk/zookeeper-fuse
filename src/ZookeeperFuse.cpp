@@ -311,6 +311,27 @@ static void reread_symlinks() {
 }
 static int access_callback(const char * path, int mode) {
     callback_init("access_callback", path);
+    string s_path(path);
+
+    if (global_symlinks.find(s_path) != global_symlinks.end()) {
+        return 0;   // We found a symlink!
+    }
+
+    try {
+        ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_path));
+        if (file.exists()) {
+            return 0;
+        } else {
+            return -ENOENT;
+        }
+    } catch (ZooFileException e) {
+        LOG(context, Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
+        return -EIO;
+    } catch (ZookeeperFuseContextException e) {
+        LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
+        return -EIO;
+    }
+
     return 0;
 }
 
