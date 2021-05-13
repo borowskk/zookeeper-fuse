@@ -89,3 +89,8 @@ Locking files
 
 `lock()` and `flock()` are no-ops (only in HYBRID mode).
 They will create a file if it doesn't exist.
+
+
+Release
+-------
+`release()` and `releasedir()` are available in HYBRID mode, they are simply no-ops.

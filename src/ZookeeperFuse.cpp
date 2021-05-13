@@ -55,6 +55,10 @@ static int readlink_callback(const char * path, char * out, size_t buf_size);
 static int symlink_callback(const char * path_to, const char * path_from);
 static int lock_callback(const char * path, struct fuse_file_info * info, int cmd, struct flock * flock_s);
 static int flock_callback(const char * path, struct fuse_file_info * info, int op);
+static int releasedir_callback(const char * path, struct fuse_file_info * info);
+static int release_callback(const char * path, struct fuse_file_info * info);
+
+
 
 const static string dataNodeName = "_zoo_data_";
 const static string symlinkNodeName = "__symlinks__";
@@ -162,6 +166,8 @@ int main(int argc, char** argv) {
         fuse_zoo_operations.readlink = readlink_callback;
         fuse_zoo_operations.lock = lock_callback;
         fuse_zoo_operations.flock = flock_callback;
+        fuse_zoo_operations.release = release_callback;
+        fuse_zoo_operations.releasedir = releasedir_callback;
     }
     fuse_zoo_operations.getattr = getattr_callback;
     fuse_zoo_operations.open = open_callback;
@@ -299,6 +305,15 @@ static void reread_symlinks() {
     } catch (ZookeeperFuseContextException e) {
         LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error while re-reading symlinks: %d", e.getErrorCode());
     }
+}
+
+static int releasedir_callback(const char * path, struct fuse_file_info * info) {
+    callback_init("releasedir_callback", path);
+    return 0;
+}
+static int release_callback(const char * path, struct fuse_file_info * info) {
+    callback_init("release_callback", path);
+    return 0;
 }
 
 
