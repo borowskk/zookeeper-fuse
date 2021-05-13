@@ -73,6 +73,8 @@ If you keep on processing files with the same names, it should be OK.
 
 But tl;dr - ZooKeeper systems are usable as a normal filesystem in HYBRID mode.
 
+In general, it's enough for certbot to put certificates on, so it's pretty good.
+
 Symlinks
 --------
 
