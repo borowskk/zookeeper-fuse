@@ -53,6 +53,8 @@ static int unlink_callback(const char *);
 static int mkdir_callback(const char*, mode_t);
 static int readlink_callback(const char * path, char * out, size_t buf_size);
 static int symlink_callback(const char * path_to, const char * path_from);
+static int lock_callback(const char * path, struct fuse_file_info * info, int cmd, struct flock * flock_s);
+static int flock_callback(const char * path, struct fuse_file_info * info, int op);
 
 const static string dataNodeName = "_zoo_data_";
 const static string symlinkNodeName = "__symlinks__";
@@ -158,6 +160,8 @@ int main(int argc, char** argv) {
     if (leafMode == LEAF_AS_HYBRID) {
         fuse_zoo_operations.symlink = symlink_callback;
         fuse_zoo_operations.readlink = readlink_callback;
+        fuse_zoo_operations.lock = lock_callback;
+        fuse_zoo_operations.flock = flock_callback;
     }
     fuse_zoo_operations.getattr = getattr_callback;
     fuse_zoo_operations.open = open_callback;
@@ -295,6 +299,50 @@ static void reread_symlinks() {
     } catch (ZookeeperFuseContextException e) {
         LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error while re-reading symlinks: %d", e.getErrorCode());
     }
+}
+
+
+static int lock_callback(const char * path, struct fuse_file_info * info, int cmd, struct flock * flock_s) {
+    callback_init("lock_callback", path);
+
+    try {
+        ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
+
+        if (!file.exists()) {
+            file.create();
+            file.markAsFile();
+        }
+    } catch (ZooFileException e) {
+        LOG(context, Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
+        return -EIO;
+    } catch (ZookeeperFuseContextException e) {
+        LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
+        return -EIO;
+    }
+
+    return 0;
+}
+
+
+static int flock_callback(const char * path, struct fuse_file_info * info, int op) {
+    callback_init("flock_callback", path);
+
+    try {
+        ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
+
+        if (!file.exists()) {
+            file.create();
+            file.markAsFile();
+        }
+    } catch (ZooFileException e) {
+        LOG(context, Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
+        return -EIO;
+    } catch (ZookeeperFuseContextException e) {
+        LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error: %d", e.getErrorCode());
+        return -EIO;
+    }
+
+    return 0;
 }
 
 
