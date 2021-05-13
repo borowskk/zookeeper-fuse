@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
     string zooAuthentication;
     string zooPath = "/";
     LeafMode leafMode = LEAF_AS_DIR;
-    size_t maxFileSize = 1024;
+    size_t maxFileSize = 1048576;
     Logger::LogLevel logLevel = Logger::INFO;
     string logPropFile;
 
@@ -311,6 +311,7 @@ static void reread_symlinks() {
 }
 static int access_callback(const char * path, int mode) {
     callback_init("access_callback", path);
+    ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
     string s_path(path);
 
     if (global_symlinks.find(s_path) != global_symlinks.end()) {
