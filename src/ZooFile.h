@@ -67,7 +67,13 @@ public:
     bool exists() const;
     bool isDir() const;
 
+    /**
+     * Check if we have seen this file previously, and mark it as a directory if we haven't
+     */
     void markAsDirectory() const;
+    /**
+     * Check if we have seen this file previously, and mark it as a file if we haven't
+     */
     void markAsFile() const;
 
     vector<string> getChildren() const;

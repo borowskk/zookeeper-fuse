@@ -58,7 +58,7 @@ static int flock_callback(const char * path, struct fuse_file_info * info, int o
 static int releasedir_callback(const char * path, struct fuse_file_info * info);
 static int release_callback(const char * path, struct fuse_file_info * info);
 static int opendir_callback(const char * path, struct fuse_file_info * info);
-
+static int access_callback(const char * path, int mode);
 
 
 const static string dataNodeName = "_zoo_data_";
@@ -170,6 +170,7 @@ int main(int argc, char** argv) {
         fuse_zoo_operations.release = release_callback;
         fuse_zoo_operations.releasedir = releasedir_callback;
         fuse_zoo_operations.opendir = opendir_callback;
+        fuse_zoo_operations.access = access_callback;
     }
     fuse_zoo_operations.getattr = getattr_callback;
     fuse_zoo_operations.open = open_callback;
@@ -307,6 +308,10 @@ static void reread_symlinks() {
     } catch (ZookeeperFuseContextException e) {
         LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error while re-reading symlinks: %d", e.getErrorCode());
     }
+}
+static int access_callback(const char * path, int mode) {
+    callback_init("access_callback", path);
+    return 0;
 }
 
 static int releasedir_callback(const char * path, struct fuse_file_info * info) {
@@ -487,6 +492,7 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
             boost::filesystem::path child_path(it->first);
             if (child_path.parent_path() == parent) {
                 filler(buf, child_path.filename().c_str(), NULL, 0);
+                LOG(context, Logger::DEBUG, "adding a symlink %s", child_path.filename().c_str());
             }
         }
     }
@@ -502,6 +508,7 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
             if ((context->getLeafMode() == LEAF_AS_HYBRID) && (symlinkNodeName == children[i])) {
                 continue;
             }
+            LOG(context, Logger::DEBUG, "adding a file %s", children[i].c_str());
             filler(buf, children[i].c_str(), NULL, 0);
         }
     } catch (ZooFileException e) {
