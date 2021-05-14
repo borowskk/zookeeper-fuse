@@ -108,7 +108,8 @@ bool ZooFile::isDir() const {
                 // If it has any content
                 return (getLength() == 0);
             }
-            return false;
+            // else is a directory, since it has children
+            return true;
         }
         return true;
     }
