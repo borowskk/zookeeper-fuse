@@ -298,8 +298,8 @@ static void reread_symlinks() {
             symlink_pairs_t.clear();
             boost::split(symlink_pairs_t, *it, boost::is_any_of("="));
             if (symlink_pairs_t.size() < 2) {
-                LOG(context, Logger::ERROR, "Seen an error processing symlink entry \"%s\"", it->c_str());
-                throw std::exception(); // invalid symlink description
+                LOG(context, Logger::WARNING, "Seen an error processing symlink entry \"%s\", skipping it", it->c_str());
+                continue;
             }
             string symlink = symlink_pairs_t[0];
             string pointing_at = symlink_pairs_t[1];
