@@ -21,7 +21,7 @@
 
 #ifndef ZOOFILE_H
 #define	ZOOFILE_H
-
+#define DBOOST_STACKTRACE_USE_ADDR2LINE
 #include <vector>
 #include <string>
 #include <exception>
@@ -30,7 +30,6 @@
 #include <zookeeper/zookeeper.h>
 
 using namespace std;
-using namespace boost;
 
 class ZooFileException : public std::exception {
 public:
@@ -65,20 +64,37 @@ public:
     ZooFile(const ZooFile& orig);
     virtual ~ZooFile();
     
-    bool exits() const;
+    bool exists() const;
     bool isDir() const;
-    
+
+    /**
+     * Check if we have seen this file previously, and mark it as a directory if we haven't
+     */
+    void markAsDirectory() const;
+    /**
+     * Check if we have seen this file previously, and mark it as a file if we haven't
+     */
+    void markAsFile() const;
+
     vector<string> getChildren() const;
     string getContent() const;
     void remove();
-    
+    /**
+     * This is ever only called in LEAF_AS_HYBRID mode, and the only watch is then set is
+     * for /__symlinks__
+     */
+    string getContentAndSetWatch() const;
     void setContent(string);
     void create();
-    
+    size_t getLength() const;
+
 private:
     zhandle_t* handle_;
     const string path_;
 };
+
+
+void enableHybridMode();
 
 #endif	/* ZOOFILE_H */
 

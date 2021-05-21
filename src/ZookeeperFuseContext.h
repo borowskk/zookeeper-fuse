@@ -36,7 +36,8 @@ using namespace boost;
 
 enum LeafMode {
     LEAF_AS_DIR,
-    LEAF_AS_FILE
+    LEAF_AS_FILE,
+    LEAF_AS_HYBRID
 };
 
 class ZookeeperFuseContextException : public std::exception {
@@ -103,5 +104,6 @@ private:
     auto_ptr<Logger> logger_;
 };
 
+static void zkWatcher(zhandle_t *zh, int type, int state, const char *path, void *watcherCtx);
 #endif	/* ZOOCONTEXT_H */
 

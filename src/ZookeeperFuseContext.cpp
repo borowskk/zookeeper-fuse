@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2016 Kyle Borowski
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,7 @@
  *
  * File:   ZooContext.cpp
  * Author: kyle
- * 
+ *
  * Created on July 31, 2016, 10:37 AM
  */
 
@@ -69,7 +69,7 @@ zhandle_t* ZookeeperFuseContext::getZookeeperHandle() {
             cerr << "Failed to create zookeeper handle with error: " << errno << endl;
             return NULL;
         }
-        
+
         if (!authSheme_.empty() && !auth_.empty()) {
             cout << "Will authenticate with scheme: " << authSheme_ << " and authentication: " << auth_ << endl;
             int rc = zoo_add_auth(handle_, authSheme_.c_str(), auth_.c_str(), auth_.size(), NULL, NULL);
@@ -78,7 +78,7 @@ zhandle_t* ZookeeperFuseContext::getZookeeperHandle() {
             }
         }
 
-        // Should eventually use a mechanism with a blocking wait    
+        // Should eventually use a mechanism with a blocking wait
         char event;
         while (!eventQueue_.pop(event)) {
             cout << "Waiting for the zookeeper connection to be established." << endl;
@@ -91,7 +91,7 @@ zhandle_t* ZookeeperFuseContext::getZookeeperHandle() {
 string ZookeeperFuseContext::getPath() const {
     return path_;
 }
- 
+
 void ZookeeperFuseContext::setPath(const string &path) {
     path_ = path;
 }
@@ -121,6 +121,7 @@ ZookeeperFuseContext* ZookeeperFuseContext::getZookeeperFuseContext(fuse_context
     }
     throw ZookeeperFuseContextException("Could not get the zookeeper context from fuse", ZINVALIDSTATE);
 }
+
 
 zhandle_t* ZookeeperFuseContext::getZookeeperHandle(fuse_context* context) {
     ZookeeperFuseContext* zooContext = getZookeeperFuseContext(context);
