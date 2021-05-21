@@ -299,6 +299,8 @@ static void reread_symlinks() {
             symlink_pairs_t.clear();
             boost::split(symlink_pairs_t, *it, boost::is_any_of("="));
             if (symlink_pairs_t.size() < 2) {
+                // Most probably you made too many symlinks and the size of __symlink__ file hit
+                // the size limit. Increase the size limit in that case
                 LOG(context, Logger::WARNING, "Seen an error processing symlink entry \"%s\", skipping it", it->c_str());
                 continue;
             }
