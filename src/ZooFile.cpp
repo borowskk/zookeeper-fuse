@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2016 Kyle Borowski
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,7 @@
  *
  * File:   ZooFile.cpp
  * Author: kyle
- * 
+ *
  * Created on July 27, 2016, 7:52 PM
  */
 
@@ -28,7 +28,7 @@
 // @todo add cache invalidation. Now the entries are kept for all eternity
 unordered_set<string> for_sure_files, for_sure_directories;
 
-const size_t ZooFile::MAX_FILE_SIZE = 131072;
+const size_t ZooFile::MAX_FILE_SIZE = 262144;
 bool is_hybrid_mode = false;
 
 
@@ -117,14 +117,14 @@ bool ZooFile::isDir() const {
 }
 
 vector<string> ZooFile::getChildren() const {
-    vector<string> retval;    
+    vector<string> retval;
     String_vector children;
-    
+
     int rc = zoo_get_children(handle_, path_.c_str(), 0, &children);
     if (rc != ZOK) {
         throw ZooFileException("An error occurred getting children of file: " + path_, rc);
-    }    
-    
+    }
+
     for (int i = 0; i < children.count; i++) {
         retval.push_back(children.data[i]);
     }
@@ -136,15 +136,15 @@ string ZooFile::getContent() const {
     Stat stat;
     char content[MAX_FILE_SIZE];
     int contentLength = MAX_FILE_SIZE;
-    
+
     memset( content, 0, MAX_FILE_SIZE );
     memset( &stat, 0, sizeof(stat) );
-    
+
     int rc = zoo_get(handle_, path_.c_str(), 0, content, &contentLength, &stat);
     if (rc != ZOK) {
         throw ZooFileException("An error occurred getting the contents of file: " + path_, rc);
     }
-    
+
     string retval;
     if (contentLength > 0) {
         retval = string(content, contentLength);
@@ -158,15 +158,15 @@ string ZooFile::getContent() const {
 void ZooFile::setContent(string content) {
     int rc = zoo_set(handle_, path_.c_str(), content.c_str(), content.length(), -1);
     if (rc != ZOK) {
-        throw ZooFileException("An error occurred setting the contents of file: " + path_, rc);    
-    }   
+        throw ZooFileException("An error occurred setting the contents of file: " + path_, rc);
+    }
 }
 
 void ZooFile::create() {
     int rc = zoo_create(handle_, path_.c_str(), NULL, 0, &ZOO_OPEN_ACL_UNSAFE, 0, NULL, 0);
     if (rc != ZOK) {
         throw ZooFileException("An error occurred creating the file: " + path_, rc);
-    }      
+    }
 }
 
 size_t ZooFile::getLength() const {
