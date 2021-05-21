@@ -31,10 +31,8 @@ ZookeeperFuseContext::ZookeeperFuseContext(Logger::LogLevel maxLevel, const stri
 hosts_(hosts), authSheme_(authScheme), auth_(auth), path_(path), handle_(NULL), leafMode_(leafMode), maxFileSize_(maxFileSize), eventQueue_(8) {
 #ifdef HAVE_LOG4CPP
     logger_.reset(new Log4CPPLogger(maxLevel));
-    std::cerr << "Initializing Log4CPP with level of " << maxLevel << std::endl;
 #else
     logger_.reset(new Logger(maxLevel));
-    std::cerr << "Initializing normal logger with level of " << maxLevel << std::endl;
 #endif
 }
 
