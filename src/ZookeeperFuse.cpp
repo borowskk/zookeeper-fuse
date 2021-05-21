@@ -444,6 +444,7 @@ static int readlink_callback(const char * path, char * out, size_t buf_size) {
         LOG(context, Logger::WARNING, "Too short buffer provided for readlink, buffer "
                                       "size was %d symlink length was %d", buf_size, it->second.length());
     }
+    LOG(context, Logger::DEBUG, "Returning %s as symlink for %s", it->second.c_str(), path);
     strlcpy(out, it->second.c_str(), buf_size);
     return 0;
 }
