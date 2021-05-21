@@ -749,8 +749,8 @@ int mkdir_callback(const char* path, mode_t mode) {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
         if (!file.exists()) {
             file.create();
-            file.markAsDirectory();
         }
+        file.markAsDirectory();
     } catch (ZooFileException e) {
         LOG(context, Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
         return -EIO;
