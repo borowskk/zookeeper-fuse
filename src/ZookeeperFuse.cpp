@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
     string zooAuthentication;
     string zooPath = "/";
     LeafMode leafMode = LEAF_AS_DIR;
-    size_t maxFileSize = 1048576;
+    size_t maxFileSize = 256*1024;
     Logger::LogLevel logLevel = Logger::INFO;
     string logPropFile;
 
@@ -135,7 +135,7 @@ int main(int argc, char** argv) {
                         "--zooAuthScheme     -A          zookeeper authentication scheme (i.e. digest)\n"
                         "--zooAuthentication -a          zookeeper authentication string\n"
                         "--leafMode          -l          display mode for leaves, DIR or FILE (default=DIR) or HYBRID\n"
-                        "--maxFileSize       -m          maximum size in bytes of file in the zoo (default=1024)\n"
+                        "--maxFileSize       -m          maximum size in bytes of file in the zoo (default=256 kB)\n"
                         "--logLevel          -d          verbosity of logging ERROR, WARNING, INFO, DEBUG, TRACE\n";
                 exit(0);
                 break;
@@ -727,7 +727,7 @@ int unlink_callback(const char *path) {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_path));
         file.remove();
     } catch (ZooFileException e) {
-        if (d.getErrorCode() == ZNOTEMPTY) {
+        if (e.getErrorCode() == ZNOTEMPTY) {
             return -ENOTEMPTY;
         }
         LOG(context, Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
