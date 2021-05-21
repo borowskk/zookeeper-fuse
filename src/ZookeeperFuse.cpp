@@ -319,13 +319,11 @@ static void reread_symlinks() {
             return;
         } catch (ZooFileException e) {
             LOG(context, Logger::ERROR, "Zookeeper Error during re-reading symlinks: %d", e.getErrorCode());
-            return;
         } catch (ZookeeperFuseContextException e) {
             LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error during re-reading symlinks: %d", e.getErrorCode());
-            return;
         }
     }
-    LOG(context, Logger::ERROR, "Failed to re-read symlinks 3 times");
+    LOG(context, Logger::ERROR, "Failed to re-read symlinks %d times", 3);
 }
 
 static int access_callback(const char * path, int mode) {
