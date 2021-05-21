@@ -440,6 +440,10 @@ static int readlink_callback(const char * path, char * out, size_t buf_size) {
         }
         return -EINVAL;
     }
+    if (buf_size < it->second.length()-1) {
+        LOG(context, Logger::WARNING, "Too short buffer provided for readlink, buffer "
+                                      "size was %d symlink length was %d", buf_size, it->second.length());
+    }
     strlcpy(out, it->second.c_str(), buf_size);
     return 0;
 }
