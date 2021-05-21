@@ -727,6 +727,9 @@ int unlink_callback(const char *path) {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_path));
         file.remove();
     } catch (ZooFileException e) {
+        if (d.getErrorCode() == ZNOTEMPTY) {
+            return -ENOTEMPTY;
+        }
         LOG(context, Logger::ERROR, "Zookeeper Error: %d", e.getErrorCode());
         return -EIO;
     } catch (ZookeeperFuseContextException e) {
