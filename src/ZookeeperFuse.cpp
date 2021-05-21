@@ -453,6 +453,7 @@ static int readlink_callback(const char * path, char * out, size_t buf_size) {
 
 
 static int getattr_callback(const char *path, struct stat *stbuf) {
+    callback_init("getattr_callback", path);
     memset(stbuf, 0, sizeof (struct stat));
     ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
     string s_path(path);
