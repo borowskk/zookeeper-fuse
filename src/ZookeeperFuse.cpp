@@ -243,7 +243,6 @@ static void callback_init(const string &callback, const string &path) {
     LOG(context, Logger::DEBUG, "In: %s. Path: %s", callback.c_str(), path.c_str());
     if (!were_symlinks_readed) {
         reread_symlinks();
-        were_symlinks_readed = true;
     }
 }
 
@@ -273,48 +272,62 @@ static void store_symlinks() {
     symlinks.setContent(out.str());
 }
 
-static void reread_symlinks() {
+
+static void inner_reread_symlinks() {
     ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
     // This will always succeed
     zoo_set_watcher(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), &zookeeper_watcher);
-    try {
-        // Read symlinks and register a watch for it
-        if (context->getLeafMode() != LEAF_AS_HYBRID) {
-            return;
-        }
-        vector<string> symlinks_pairs;
-        ZooFile symlinks(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath_c(symlinkNodeNameWithPath));
-        if (!symlinks.exists()) {
-            symlinks.create();
-        }
-        string content = symlinks.getContentAndSetWatch();
-        if (content.length() == 0) {
-            return;
-        }
-        boost::split(symlinks_pairs, content, boost::is_any_of("\x0A"));
-        // There is no hazard here since or FUSE is single threaded.
-        global_symlinks.clear();
-        for (vector<string>::iterator it = symlinks_pairs.begin(); it != symlinks_pairs.end(); it++) {
-            vector<string> symlink_pairs_t;
-            symlink_pairs_t.clear();
-            boost::split(symlink_pairs_t, *it, boost::is_any_of("="));
-            if (symlink_pairs_t.size() < 2) {
-                // Most probably you made too many symlinks and the size of __symlink__ file hit
-                // the size limit. Increase the size limit in that case
-                LOG(context, Logger::WARNING, "Seen an error processing symlink entry \"%s\", skipping it", it->c_str());
-                continue;
-            }
-            string symlink = symlink_pairs_t[0];
-            string pointing_at = symlink_pairs_t[1];
-            global_symlinks[symlink] = pointing_at;
-            LOG(context, Logger::DEBUG, "Adding a symlink %s pointing to %s", symlink.c_str(), pointing_at.c_str());
-        }
-    } catch (ZooFileException e) {
-        LOG(context, Logger::ERROR, "ZooFileException re-reading symlinks %s (%d)", e.what(), e.getErrorCode());
-    } catch (ZookeeperFuseContextException e) {
-        LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error while re-reading symlinks: %d", e.getErrorCode());
+    // Read symlinks and register a watch for it
+    if (context->getLeafMode() != LEAF_AS_HYBRID) {
+        return;
     }
+    vector<string> symlinks_pairs;
+    ZooFile symlinks(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath_c(symlinkNodeNameWithPath));
+    if (!symlinks.exists()) {
+        symlinks.create();
+    }
+    string content = symlinks.getContentAndSetWatch();
+    if (content.length() == 0) {
+        return;
+    }
+    boost::split(symlinks_pairs, content, boost::is_any_of("\x0A"));
+    // There is no hazard here since or FUSE is single threaded.
+    global_symlinks.clear();
+    for (vector<string>::iterator it = symlinks_pairs.begin(); it != symlinks_pairs.end(); it++) {
+        vector<string> symlink_pairs_t;
+        symlink_pairs_t.clear();
+        boost::split(symlink_pairs_t, *it, boost::is_any_of("="));
+        if (symlink_pairs_t.size() < 2) {
+            // Most probably you made too many symlinks and the size of __symlink__ file hit
+            // the size limit. Increase the size limit in that case
+            LOG(context, Logger::WARNING, "Seen an error processing symlink entry \"%s\", skipping it", it->c_str());
+            continue;
+        }
+        string symlink = symlink_pairs_t[0];
+        string pointing_at = symlink_pairs_t[1];
+        global_symlinks[symlink] = pointing_at;
+        LOG(context, Logger::DEBUG, "Adding a symlink %s pointing to %s", symlink.c_str(), pointing_at.c_str());
+    }
+    were_symlinks_readed = true;
 }
+
+static void reread_symlinks() {
+    ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
+    for (int i=0; i<3; i++) {
+        try{
+            inner_reread_symlinks();
+            return;
+        } catch (ZooFileException e) {
+            LOG(context, Logger::ERROR, "Zookeeper Error during re-reading symlinks: %d", e.getErrorCode());
+            return;
+        } catch (ZookeeperFuseContextException e) {
+            LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error during re-reading symlinks: %d", e.getErrorCode());
+            return;
+        }
+    }
+    LOG(context, Logger::ERROR, "Failed to re-read symlinks 3 times");
+}
+
 static int access_callback(const char * path, int mode) {
     callback_init("access_callback", path);
     ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
