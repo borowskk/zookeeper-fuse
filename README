@@ -36,9 +36,10 @@ Limitations:
 For development using Ubuntu 16.04 (Xenial Xerus)
 Required Packages for compilation:
  - libzookeeper-mt-dev
- - libfuse-dev 
+ - libfuse-dev
  - zookeeper
  - libboost-filesystem-dev
+ - libbsd-dev
 
 Optional Packages:
  - liblog4cpp5-dev
