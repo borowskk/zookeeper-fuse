@@ -158,6 +158,7 @@ int main(int argc, char** argv) {
                 maxFileSize = atoi(optarg);
                 break;
             case 'd':
+                cout << "Setting log level to "<< optarg << endl;
                 logLevel = Logger::stringToLevel(optarg);
                 break;
         }
