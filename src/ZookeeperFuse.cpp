@@ -307,6 +307,7 @@ static void reread_symlinks() {
             string symlink = symlink_pairs_t[0];
             string pointing_at = symlink_pairs_t[1];
             global_symlinks[symlink] = pointing_at;
+            LOG(context, Logger::DEBUG, "Adding a symlink %s pointing to %s", symlink.c_str(), pointing_at.c_str());
         }
     } catch (ZooFileException e) {
         LOG(context, Logger::ERROR, "ZooFileException re-reading symlinks %s (%d)", e.what(), e.getErrorCode());
