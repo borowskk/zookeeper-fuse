@@ -333,7 +333,7 @@ static int rename_callback(const char * path, const char * target, unsigned int 
     callback_init("rename_callback", path);
     ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
     string s_path(path), s_target(target);
-
+    bool should_store_symlinks = false;
     if (flags == RENAME_EXCHANGE) {
         return -ENOSYS;
     }
@@ -346,9 +346,7 @@ static int rename_callback(const char * path, const char * target, unsigned int 
         }
         string target = it->second;
         global_symlinks.erase(it);
-        global_symlinks[target] = target;
-        store_symlinks();
-        return 0;   // We found a symlink!
+        should_store_symlinks = true;
     } else {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
 
@@ -362,12 +360,12 @@ static int rename_callback(const char * path, const char * target, unsigned int 
     }
 
     // copy the file
-    unordered_map<string, string>::iterator it = global_symlinks.find(s_path);
+    it = global_symlinks.find(s_path);
     if (it != global_symlinks.end()) {
         string target = it->second;
         global_symlinks.erase(it);
         global_symlinks[target] = target;
-        store_symlinks();
+        should_store_symlinks = true;
     } else {
         ZooFile source_file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_path));
         ZooFile target_file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_target));
@@ -383,6 +381,10 @@ static int rename_callback(const char * path, const char * target, unsigned int 
             source_file.remove();
         }
     }
+    if (should_store_symlinks) {
+        store_symlinks();
+    }
+
     return 0;
 
 }
