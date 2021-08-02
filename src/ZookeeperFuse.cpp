@@ -365,6 +365,7 @@ static int rename_callback(const char * path, const char * target) {
             LOG(context, Logger::ERROR, "Renaming directories is not supported, tried to rename %s", s_path.c_str());
             return -ENOSYS;
         } else {
+            target_file.create();
             target_file.setContent(source_file.getContent());
             target_file.markAsFile();
             source_file.remove();
