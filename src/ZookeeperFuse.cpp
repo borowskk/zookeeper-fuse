@@ -375,6 +375,9 @@ static int rename_callback(const char * path, const char * target, unsigned int 
         if (source_file.isDir()) {
             return -ENOSYS;
         } else {
+            if (target_file.exists()) {
+                target_file.remove();
+            }
             target_file.setContent(source_file.getContent());
             target_file.markAsFile();
             source_file.remove();
