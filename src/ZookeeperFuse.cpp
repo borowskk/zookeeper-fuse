@@ -50,7 +50,7 @@ static int chown_callback(const char *, uid_t, gid_t);
 static int utime_callback(const char *, struct utimbuf *);
 static int create_callback(const char *, mode_t, struct fuse_file_info *);
 static int truncate_callback(const char *, off_t);
-static int rename_callback(const char *path, const char *target, unsigned int flags);
+static int rename_callback(const char *path, const char *target);
 static int unlink_callback(const char *);
 static int mkdir_callback(const char*, mode_t);
 static int readlink_callback(const char * path, char * out, size_t buf_size);
@@ -329,21 +329,15 @@ static void reread_symlinks() {
     LOG(context, Logger::ERROR, "Failed to re-read symlinks %d times", 3);
 }
 
-static int rename_callback(const char * path, const char * target, unsigned int flags) {
+static int rename_callback(const char * path, const char * target) {
     callback_init("rename_callback", path);
     ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
     string s_path(path), s_target(target);
     bool should_store_symlinks = false;
-    if (flags == RENAME_EXCHANGE) {
-        return -ENOSYS;
-    }
 
     // delete the target, if it exists
     unordered_map<string, string>::iterator it = global_symlinks.find(s_target);
     if (it != global_symlinks.end()) {
-        if (flags == RENAME_NOREPLACE) {
-            return -EEXIST;
-        }
         string target = it->second;
         global_symlinks.erase(it);
         should_store_symlinks = true;
@@ -351,9 +345,6 @@ static int rename_callback(const char * path, const char * target, unsigned int 
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_target));
 
         if (file.exists()) {
-            if (flags == RENAME_NOREPLACE) {
-                return -EEXIST;
-            }
             file.remove();
         }
 
@@ -371,11 +362,9 @@ static int rename_callback(const char * path, const char * target, unsigned int 
         ZooFile target_file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_target));
 
         if (source_file.isDir()) {
+            LOG(context, Logger::ERROR, "Renaming directories is not supported");
             return -ENOSYS;
         } else {
-            if (target_file.exists()) {
-                target_file.remove();
-            }
             target_file.setContent(source_file.getContent());
             target_file.markAsFile();
             source_file.remove();
