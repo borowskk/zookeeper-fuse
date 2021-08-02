@@ -348,7 +348,7 @@ static int rename_callback(const char * path, const char * target, unsigned int 
         global_symlinks.erase(it);
         should_store_symlinks = true;
     } else {
-        ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
+        ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_target));
 
         if (file.exists()) {
             if (flags == RENAME_NOREPLACE) {
