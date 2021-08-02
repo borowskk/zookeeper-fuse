@@ -362,7 +362,7 @@ static int rename_callback(const char * path, const char * target) {
         ZooFile target_file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_target));
 
         if (source_file.isDir()) {
-            LOG(context, Logger::ERROR, "Renaming directories is not supported");
+            LOG(context, Logger::ERROR, "Renaming directories is not supported, tried to rename %s", s_path.c_str());
             return -ENOSYS;
         } else {
             target_file.setContent(source_file.getContent());
