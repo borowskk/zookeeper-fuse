@@ -373,7 +373,7 @@ static int rename_callback(const char * path, const char * target, unsigned int 
         ZooFile target_file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_target));
 
         if (source_file.isDir()) {
-            return -ENOIMPLEMENTED;
+            return -ENOSYS;
         } else {
             target_file.setContent(source_file.getContent());
             target_file.markAsFile();
