@@ -29,6 +29,7 @@ Limitations:
         In hybrid mode chmod is always 0777.
         / will always be a directory.
   - mv is not yet implemented in any leaf display mode
+    - mv is implemented in HYBRID mode, but only for files, not for directories
   - cp is not fully supported...
     - When leaf display mode is FILE, files can be copied accurately but directories aren't
     - When leaf display mode is DIR, nodes are created but contents aren't copied

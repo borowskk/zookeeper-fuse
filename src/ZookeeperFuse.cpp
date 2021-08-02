@@ -50,6 +50,7 @@ static int chown_callback(const char *, uid_t, gid_t);
 static int utime_callback(const char *, struct utimbuf *);
 static int create_callback(const char *, mode_t, struct fuse_file_info *);
 static int truncate_callback(const char *, off_t);
+static int rename_callback(const char *path, const char *target);
 static int unlink_callback(const char *);
 static int mkdir_callback(const char*, mode_t);
 static int readlink_callback(const char * path, char * out, size_t buf_size);
@@ -173,6 +174,7 @@ int main(int argc, char** argv) {
         fuse_zoo_operations.releasedir = releasedir_callback;
         fuse_zoo_operations.opendir = opendir_callback;
         fuse_zoo_operations.access = access_callback;
+        fuse_zoo_operations.rename = rename_callback;
     }
     fuse_zoo_operations.getattr = getattr_callback;
     fuse_zoo_operations.open = open_callback;
@@ -325,6 +327,60 @@ static void reread_symlinks() {
         }
     }
     LOG(context, Logger::ERROR, "Failed to re-read symlinks %d times", 3);
+}
+
+static int rename_callback(const char * path, const char * target) {
+    callback_init("rename_callback", path);
+    ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
+    string s_path(path), s_target(target);
+    bool should_store_symlinks = false;
+
+    // delete the target, if it exists
+    unordered_map<string, string>::iterator it = global_symlinks.find(s_target);
+    if (it != global_symlinks.end()) {
+        string target = it->second;
+        global_symlinks.erase(it);
+        should_store_symlinks = true;
+    } else {
+        ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_target));
+
+        if (file.exists()) {
+            file.remove();
+        }
+
+    }
+
+    // copy the file
+    it = global_symlinks.find(s_path);
+    if (it != global_symlinks.end()) {
+        string target = it->second;
+        global_symlinks.erase(it);
+        global_symlinks[target] = target;
+        should_store_symlinks = true;
+    } else {
+        ZooFile source_file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_path));
+        ZooFile target_file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_target));
+
+        if (!source_file.exists()) {
+            return -ENOENT;
+        }
+
+        if (source_file.isDir()) {
+            LOG(context, Logger::ERROR, "Renaming directories is not supported, tried to rename %s", s_path.c_str());
+            return -ENOSYS;
+        } else {
+            target_file.create();
+            target_file.setContent(source_file.getContent());
+            target_file.markAsFile();
+            source_file.remove();
+        }
+    }
+    if (should_store_symlinks) {
+        store_symlinks();
+    }
+
+    return 0;
+
 }
 
 static int access_callback(const char * path, int mode) {
