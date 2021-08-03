@@ -519,18 +519,26 @@ static int readlink_callback(const char * path, char * out, size_t buf_size) {
     ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
     string s_path(path);
     unordered_map<string, string>::iterator it = global_symlinks.find(s_path);
-    if (it == global_symlinks.end()) {
-        LOG(context, Logger::DEBUG, "Requested nonexisting symlink: %s", s_path);
+    try {
+        if (it == global_symlinks.end()) {
+            LOG(context, Logger::DEBUG, "Requested nonexisting symlink: %s", s_path);
 
-        ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
-        if (!file.exists()) {
-            return -ENOENT;
+            ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
+            if (!file.exists()) {
+                return -ENOENT;
+            }
+            return -EINVAL;
         }
-        return -EINVAL;
-    }
-    if (buf_size < it->second.length()-1) {
-        LOG(context, Logger::WARNING, "Too short buffer provided for readlink, buffer "
-                                      "size was %d symlink length was %d", buf_size, it->second.length());
+        if (buf_size < it->second.length()-1) {
+            LOG(context, Logger::WARNING, "Too short buffer provided for readlink, buffer "
+                                          "size was %d symlink length was %d", buf_size, it->second.length());
+        }
+    } catch (ZooFileException e) {
+        LOG(context, Logger::ERROR, "Zookeeper Error during readlink: %d", e.getErrorCode());
+        return -EIO;
+    } catch (ZookeeperFuseContextException e) {
+        LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error during readlink: %d", e.getErrorCode());
+        return -EIO;
     }
     LOG(context, Logger::DEBUG, "Returning %s as symlink for %s", it->second.c_str(), path);
     strlcpy(out, it->second.c_str(), buf_size);
