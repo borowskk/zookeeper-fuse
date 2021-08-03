@@ -356,7 +356,7 @@ static int rename_callback(const char * path, const char * target) {
         }
 
         // delete the target, if it exists
-        unordered_map<string, string>::iterator it = global_symlinks.find(s_target);
+        it = global_symlinks.find(s_target);
         if (it != global_symlinks.end()) {
             string target = it->second;
             global_symlinks.erase(it);
