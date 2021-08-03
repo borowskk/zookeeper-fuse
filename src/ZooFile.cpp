@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Kyle Borowski
+ * Copyright 2016-2021 Kyle Borowski & Piotr Maślanka
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * File:   ZooFile.cpp
- * Author: kyle
+ * Author: kyle & Piotr Maślanka
  *
  * Created on July 27, 2016, 7:52 PM
  */

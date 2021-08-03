@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Kyle Borowski
+ * Copyright 2016-2021 Kyle Borowski & Piotr Maślanka
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * File:   ZookeeperFuse.cpp
- * Author: Kyle Borowski
+ * Author: Kyle Borowski & Piotr Maślanka
  *
  * Created on July 26, 2016, 8:24 PM
  */
@@ -272,7 +272,13 @@ static void store_symlinks() {
         }
     }
     ZooFile symlinks(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath_c(symlinkNodeNameWithPath));
-    symlinks.setContent(out.str());
+    try {
+        symlinks.setContent(out.str());
+    } catch (ZooFileException e) {
+        LOG(context, Logger::ERROR, "Zookeeper Error during storing symlinks: %d", e.getErrorCode());
+    } catch (ZookeeperFuseContextException e) {
+        LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error during storing symlinks: %d", e.getErrorCode());
+    }
 }
 
 
@@ -334,51 +340,63 @@ static int rename_callback(const char * path, const char * target) {
     ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
     string s_path(path), s_target(target);
     bool should_store_symlinks = false;
+    try {
 
-    // delete the target, if it exists
-    unordered_map<string, string>::iterator it = global_symlinks.find(s_target);
-    if (it != global_symlinks.end()) {
-        string target = it->second;
-        global_symlinks.erase(it);
-        should_store_symlinks = true;
-    } else {
-        ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_target));
+        // assert that source exists
+        unordered_map<string, string>::iterator it = global_symlinks.find(s_path);
+        if (it == global_symlinks.end()) {
+            ZooFile source_file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_path));
+            if (source_file.exists()) {
+                if (source_file.isDir()) {
+                    LOG(context, Logger::ERROR, "Renaming directories is not supported, tried to rename %s", path);
+                    return -ENOSYS;
+                }
+            }
 
-        if (file.exists()) {
-            file.remove();
         }
 
-    }
-
-    // copy the file
-    it = global_symlinks.find(s_path);
-    if (it != global_symlinks.end()) {
-        string target = it->second;
-        global_symlinks.erase(it);
-        global_symlinks[target] = target;
-        should_store_symlinks = true;
-    } else {
-        ZooFile source_file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_path));
-        ZooFile target_file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_target));
-
-        if (!source_file.exists()) {
-            return -ENOENT;
-        }
-
-        if (source_file.isDir()) {
-            LOG(context, Logger::ERROR, "Renaming directories is not supported, tried to rename %s", s_path.c_str());
-            return -ENOSYS;
+        // delete the target, if it exists
+        unordered_map<string, string>::iterator it = global_symlinks.find(s_target);
+        if (it != global_symlinks.end()) {
+            string target = it->second;
+            global_symlinks.erase(it);
+            should_store_symlinks = true;
         } else {
+            ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_target));
+
+            if (file.exists()) {
+                file.remove();
+            } else {
+                return -ENOENT;     // source did not exist
+            }
+        }
+
+        // copy the file
+        it = global_symlinks.find(s_path);
+        if (it != global_symlinks.end()) {
+            string target = it->second;
+            global_symlinks.erase(it);
+            global_symlinks[target] = target;
+            should_store_symlinks = true;
+        } else {
+            ZooFile source_file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_path));
+            ZooFile target_file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_target));
+
             target_file.create();
             target_file.setContent(source_file.getContent());
             target_file.markAsFile();
             source_file.remove();
         }
+        if (should_store_symlinks) {
+            store_symlinks();
+        }
+    } catch (ZooFileException e) {
+        LOG(context, Logger::ERROR, "Zookeeper Error during rename: %d", e.getErrorCode());
+        return -EIO;
+    } catch (ZookeeperFuseContextException e) {
+        LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error during rename: %d", e.getErrorCode());
+        return -EIO;
     }
-    if (should_store_symlinks) {
-        store_symlinks();
-    }
-
     return 0;
 
 }
