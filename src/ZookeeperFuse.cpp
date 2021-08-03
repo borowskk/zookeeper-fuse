@@ -387,9 +387,6 @@ static int rename_callback(const char * path, const char * target) {
             target_file.markAsFile();
             source_file.remove();
         }
-        if (should_store_symlinks) {
-            store_symlinks();
-        }
     } catch (ZooFileException e) {
         LOG(context, Logger::ERROR, "Zookeeper Error during rename: %d", e.getErrorCode());
         return -EIO;
@@ -397,8 +394,10 @@ static int rename_callback(const char * path, const char * target) {
         LOG(context, Logger::ERROR, "Zookeeper Fuse Context Error during rename: %d", e.getErrorCode());
         return -EIO;
     }
+    if (should_store_symlinks) {
+        store_symlinks();
+    }
     return 0;
-
 }
 
 static int access_callback(const char * path, int mode) {
