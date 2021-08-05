@@ -99,7 +99,6 @@ int main(int argc, char** argv) {
     string zooAuthentication;
     string zooPath = "/";
     LeafMode leafMode = LEAF_AS_DIR;
-    size_t maxFileSize = 256*1024;
     Logger::LogLevel logLevel = Logger::INFO;
     string logPropFile;
 
@@ -121,7 +120,6 @@ int main(int argc, char** argv) {
         { "zooAuthScheme", required_argument, NULL, 'A'},
         { "zooAuthentication", required_argument, NULL, 'a'},
         { "leafMode", required_argument, NULL, 'l'},
-        { "maxFileSize", required_argument, NULL, 'm'},
         { "logLevel", required_argument, NULL, 'd'},
         { 0, 0, 0, 0}
     };
@@ -136,7 +134,6 @@ int main(int argc, char** argv) {
                         "--zooAuthScheme     -A          zookeeper authentication scheme (i.e. digest)\n"
                         "--zooAuthentication -a          zookeeper authentication string\n"
                         "--leafMode          -l          display mode for leaves, DIR or FILE (default=DIR) or HYBRID\n"
-                        "--maxFileSize       -m          maximum size in bytes of file in the zoo (default=256 kB)\n"
                         "--logLevel          -d          verbosity of logging ERROR, WARNING, INFO, DEBUG, TRACE\n";
                 exit(0);
                 break;
@@ -154,9 +151,6 @@ int main(int argc, char** argv) {
                 break;
             case 'l':
                 leafMode = (string(optarg) != "FILE") ? ((string(optarg) != "DIR") ? LEAF_AS_HYBRID : LEAF_AS_DIR) : LEAF_AS_FILE;
-                break;
-            case 'm':
-                maxFileSize = atoi(optarg);
                 break;
             case 'd':
                 cout << "Setting log level to "<< optarg << endl;
@@ -191,7 +185,7 @@ int main(int argc, char** argv) {
     fuse_zoo_operations.mkdir = mkdir_callback;
 
     auto_ptr<ZookeeperFuseContext> context(
-        new ZookeeperFuseContext(logLevel, zooHosts, zooAuthScheme, zooAuthentication, zooPath, leafMode, maxFileSize));
+        new ZookeeperFuseContext(logLevel, zooHosts, zooAuthScheme, zooAuthentication, zooPath, leafMode));
 
     if (leafMode == LEAF_AS_HYBRID) {
         enableHybridMode();
@@ -722,11 +716,6 @@ int write_callback(const char *path, const char *buf, size_t size, off_t offset,
     ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
 
     try {
-        if (offset + size > context->getMaxFileSize()) {
-            LOG(context, Logger::ERROR, "Attempting to write past maximum file size of %d", context->getMaxFileSize());
-            return -EINVAL;
-        }
-
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
         content = file.getContent();
         content.resize(offset + size);

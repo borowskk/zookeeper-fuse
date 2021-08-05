@@ -27,8 +27,8 @@
 #include "logger/Logger.h"
 #include "logger/Log4CPPLogger.h"
 
-ZookeeperFuseContext::ZookeeperFuseContext(Logger::LogLevel maxLevel, const string &hosts, const string &authScheme, const string &auth, const string &path, LeafMode leafMode, size_t maxFileSize):
-hosts_(hosts), authSheme_(authScheme), auth_(auth), path_(path), handle_(NULL), leafMode_(leafMode), maxFileSize_(maxFileSize), eventQueue_(8) {
+ZookeeperFuseContext::ZookeeperFuseContext(Logger::LogLevel maxLevel, const string &hosts, const string &authScheme, const string &auth, const string &path, LeafMode leafMode):
+hosts_(hosts), authSheme_(authScheme), auth_(auth), path_(path), handle_(NULL), leafMode_(leafMode), eventQueue_(8) {
 #ifdef HAVE_LOG4CPP
     logger_.reset(new Log4CPPLogger(maxLevel));
 #else
@@ -102,14 +102,6 @@ LeafMode ZookeeperFuseContext::getLeafMode() const {
 
 void ZookeeperFuseContext::setLeafMode(LeafMode leafMode) {
     leafMode_ = leafMode;
-}
-
-size_t ZookeeperFuseContext::getMaxFileSize() const {
-    return maxFileSize_;
-}
-
-void ZookeeperFuseContext::setMaxFileSize(size_t maxFileSize) {
-    maxFileSize_ = maxFileSize;
 }
 
 ZookeeperFuseContext* ZookeeperFuseContext::getZookeeperFuseContext(fuse_context* context) {
