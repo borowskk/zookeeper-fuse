@@ -98,7 +98,7 @@ Symlinks are supported in the HYBRID mode. Put simply, zookeeper-fuse creates a 
 called `__symlinks__` in the root of your ZooKeeper mounting point and stores there
 names of files in the form of `<name of symlink>=<name of the file that it points to><LF>`.
 
-It also registers a watch on it, so that if it is changed by another zookeeper-fuse, 
+It also registers a watch on it, so that if it is changed by another zookeeper-fuse,
 it will know.
 
 Note that in HYBRID mode `__symlinks__` becomes an invalid file name.
