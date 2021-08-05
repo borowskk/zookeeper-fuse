@@ -151,12 +151,23 @@ string ZooFile::getContent() const {
     }
 
     string retval;
-    if (contentLength > 0) {
-        retval = string(content, contentLength);
-    } else {
-        retval = "";
-    }
 
+    if (contentLength > MAX_FILE_SIZE) {
+        char * file_contents = new char[contentLength];
+        int rc = zoo_get(handle_, path_.c_str(), 0, file_contents, &contentLength, &stat);
+        if (rc != ZOK) {
+            delete file_contents;
+            throw ZooFileException("An error occurred getting the contents of file: " + path_, rc);
+        }
+        retval = string(file_contents, contentLength);
+        delete file_contents;
+    } else {
+        if (contentLength > 0) {
+            retval = string(content, contentLength);
+        } else {
+            retval = "";
+        }
+    }
     return retval;
 }
 

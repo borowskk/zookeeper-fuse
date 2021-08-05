@@ -121,7 +121,10 @@ make it a directory. It will also mark any unmarked file as a directory.
 `access()` is available only in HYBRID mode and will always return OK for existing
 files and symlinks and ENOTENT for those that do not exist.
 
-Keep in mind that in all modes the maximum file size is 256 kB.
+Keep in mind that if your files are larger than 256 kB they will be 
+read twice, since the first read returns content length.
+
+Therefore, maximum file size is limited by your ZooKeeper.
 
 See also
 ========
