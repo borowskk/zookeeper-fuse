@@ -45,17 +45,13 @@ zookeper-fuse /mnt/zoo -- --zooHosts localhost:2181
 
 Limitations
 -----------
-  * Displaying Leaf Nodes: In the Zookeeper, even directories can have contents. An aspect which is difficult to represent within the constraints of a fuse filesystem. As such, two leaf display modes are supported: DIR and FILE. In both modes the contents of directories are stored in special "_zoo_data_" files. The differences between the display modes are as follows:
+* Displaying Leaf Nodes: In the Zookeeper, even directories can have contents. An aspect which is difficult to represent within the constraints of a fuse filesystem. As such, two leaf display modes are supported: DIR and FILE. In both modes the contents of directories are stored in special "_zoo_data_" files. The differences between the display modes are as follows:
     1. DIR: Display all leaf nodes as directories, has the side-effect that new files can only be created using mkdir.
     2. FILE: Display all leaf nodes as files, has the side-effect that directories cannot be created.
-    3. HYBRID: Empty or child-having nodes are shown as directories.
-        Other nodes, if they have data and do not have children, are files.
-        This mode best translates itself to a OS-like filesystem.
-        In hybrid mode chmod is always 0777.
-        / will always be a directory.
-  * mv is not yet implemented in any leaf display mode
+    3. HYBRID: Read more below.
+* mv is not yet implemented in any leaf display mode
     * mv is implemented in HYBRID mode, but only for files, not for directories
-  * cp is not fully supported (unless you use the HYBRID mode)
+* cp is not fully supported (unless you use the HYBRID mode)
     * When leaf display mode is FILE, files can be copied accurately but directories aren't
     * When leaf display mode is DIR, nodes are created but contents aren't copied
 
@@ -71,9 +67,13 @@ created is a normal file, or a directory, permitting usage of ZooKeeper more lik
 
 If a file is not in cache, then following rules will apply:
 
+* if it's `/` then it's a directory
 * if it has any children, it's a directory
 * if it has any data, it's a file
 * if it's an empty childless node, it's a directory, so beware of touch
+
+The chmod will always be 0777, and date of last modification and access
+are returned as 1st January 1970 (zero UNIX timestamp).
 
 Note that *cache will be enabled ONLY in hybrid mode*.
 
@@ -117,3 +117,9 @@ make it a directory. It will also mark any unmarked file as a directory.
 files and symlinks and ENOTENT for those that do not exist.
 
 Keep in mind that in all modes the maximum file size is 256 kB.
+
+See also
+========
+
+* [zookeeper-volume](https://github.com/smok-serwis/zookeeper-volume) - a Docker volume plugin
+    using this package
