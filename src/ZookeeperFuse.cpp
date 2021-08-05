@@ -569,7 +569,11 @@ static int getattr_callback(const char *path, struct stat *stbuf) {
             }
 
             if (isDir) {
-                stbuf->st_mode = S_IFDIR | 0755;
+                if (context->getLeafMode() == LEAF_AS_HYBRID) {
+                    stbuf->st_mode = S_IFDIR | 0777;
+                } else {
+                    stbuf->st_mode = S_IFDIR | 0755;
+                }
                 stbuf->st_nlink = 2;
                 return 0;
             } else {

@@ -45,6 +45,9 @@ zookeper-fuse /mnt/zoo -- --zooHosts localhost:2181
 
 Limitations
 -----------
+* Date of last access and modification are not kept track of
+* Chmods are 755 for directories and 777 for files
+    * unless you're using a leaf display mode of HYBRID, there it's all 777
 * Displaying Leaf Nodes: In the Zookeeper, even directories can have contents. An aspect which is difficult to represent within the constraints of a fuse filesystem. As such, two leaf display modes are supported: DIR and FILE. In both modes the contents of directories are stored in special "_zoo_data_" files. The differences between the display modes are as follows:
     1. DIR: Display all leaf nodes as directories, has the side-effect that new files can only be created using mkdir.
     2. FILE: Display all leaf nodes as files, has the side-effect that directories cannot be created.
@@ -72,9 +75,6 @@ If a file is not in cache, then following rules will apply:
 * if it has any data, it's a file
 * if it's an empty childless node, it's a directory, so beware of touch
 
-The chmod will always be 0777, and date of last modification and access
-are returned as 1st January 1970 (zero UNIX timestamp).
-
 Note that *cache will be enabled ONLY in hybrid mode*.
 
 However, this applies just to a single machine running zookeeper-fuse from the same volume, if a single machine is
@@ -95,12 +95,13 @@ Symlinks
 --------
 
 Symlinks are supported in the HYBRID mode. Put simply, zookeeper-fuse creates a file
-called __symlinks__ in the root of your ZooKeeper mounting point and stores there
-names of files <name of symlink>=<name of the file that it points to>LF.
+called `__symlinks__` in the root of your ZooKeeper mounting point and stores there
+names of files in the form of `<name of symlink>=<name of the file that it points to><LF>`.
 
-It also registers a watch, so that if it is changed by another, zookeeper-fuse will know.
+It also registers a watch on it, so that if it is changed by another zookeeper-fuse, 
+it will know.
 
-Note that in HYBRID mode __symlinks__ becomes an invalid file name.
+Note that in HYBRID mode `__symlinks__` becomes an invalid file name.
 
 Other syscalls
 --------------
