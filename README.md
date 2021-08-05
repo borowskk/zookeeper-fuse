@@ -1,40 +1,22 @@
-# zookeeper-fuse
+zookeeper-fuse
+==============
 The zookeeper-fuse project is a libfuse compatible userspace filesystem backended by zookeeper. It allows a user to mount the entire zoo or a specific node within the zoo as a filesystem.
 
-Features:
-  - Mount the entire zoo or a subset
-  - Writes to the filesystem gets synched to the zoo
-  - Reads from the filesystem are not cached
-  - Supports authentication
+Features
+--------
 
-Building:
+  * Mount the entire zoo or a subset
+  * Writes to the filesystem gets synched to the zoo
+  * Reads from the filesystem are not cached
+  * Supports authentication
+
+Building
+--------
 
 * autoreconf -fi
 * ./configure
 * make
 * make install
-
-Mounting:
-
-```bash
-zookeper-fuse /mnt/zoo -- --zooHosts localhost:2181
-```
-
-Limitations:
-  - Displaying Leaf Nodes: In the Zookeeper, even directories can have contents. An aspect which is difficult to represent within the constraints of a fuse filesystem. As such, two leaf display modes are supported: DIR and FILE. In both modes the contents of directories are stored in special "_zoo_data_" files. The differences between the display modes are as follows:
-    1. DIR: Display all leaf nodes as directories, has the side-effect that new files can only be created using mkdir.
-    2. FILE: Display all leaf nodes as files, has the side-effect that directories cannot be created.
-    3. HYBRID: Empty or child-having nodes are shown as directories.
-        Other nodes, if they have data and do not have children, are files.
-        This mode best translates itself to a OS-like filesystem.
-        In hybrid mode chmod is always 0777.
-        / will always be a directory.
-  - mv is not yet implemented in any leaf display mode
-    - mv is implemented in HYBRID mode, but only for files, not for directories
-  - cp is not fully supported (unless you use the HYBRID mode)
-    - When leaf display mode is FILE, files can be copied accurately but directories aren't
-    - When leaf display mode is DIR, nodes are created but contents aren't copied
-
 
 For development using Ubuntu 16.04 (Xenial Xerus)
 Required Packages for compilation:
@@ -52,6 +34,30 @@ Zookeeper Package:
 
 Useful packages for testing and debugging:
  - zooinspector
+
+
+Mounting
+--------
+
+```bash
+zookeper-fuse /mnt/zoo -- --zooHosts localhost:2181
+```
+
+Limitations
+-----------
+  * Displaying Leaf Nodes: In the Zookeeper, even directories can have contents. An aspect which is difficult to represent within the constraints of a fuse filesystem. As such, two leaf display modes are supported: DIR and FILE. In both modes the contents of directories are stored in special "_zoo_data_" files. The differences between the display modes are as follows:
+    1. DIR: Display all leaf nodes as directories, has the side-effect that new files can only be created using mkdir.
+    2. FILE: Display all leaf nodes as files, has the side-effect that directories cannot be created.
+    3. HYBRID: Empty or child-having nodes are shown as directories.
+        Other nodes, if they have data and do not have children, are files.
+        This mode best translates itself to a OS-like filesystem.
+        In hybrid mode chmod is always 0777.
+        / will always be a directory.
+  * mv is not yet implemented in any leaf display mode
+    * mv is implemented in HYBRID mode, but only for files, not for directories
+  * cp is not fully supported (unless you use the HYBRID mode)
+    * When leaf display mode is FILE, files can be copied accurately but directories aren't
+    * When leaf display mode is DIR, nodes are created but contents aren't copied
 
 Hybrid mode
 ===========
