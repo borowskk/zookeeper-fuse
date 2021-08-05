@@ -56,7 +56,8 @@ Limitations
     2. FILE: Display all leaf nodes as files, has the side-effect that directories cannot be created.
     3. HYBRID: Read more below.
 * mv is not yet implemented in any leaf display mode
-    * mv is implemented in HYBRID mode, but only for files, not for directories
+    * mv is implemented in HYBRID mode, but not for non-empty directories.
+      Trying to move such a directory will result in an ENOSYS.
 * cp is not fully supported (unless you use the HYBRID mode)
     * When leaf display mode is FILE, files can be copied accurately but directories aren't
     * When leaf display mode is DIR, nodes are created but contents aren't copied

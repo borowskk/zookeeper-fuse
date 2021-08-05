@@ -340,23 +340,26 @@ static int rename_callback(const char * path, const char * target) {
     ZookeeperFuseContext* context = ZookeeperFuseContext::getZookeeperFuseContext(fuse_get_context());
     string s_path(path), s_target(target);
     bool should_store_symlinks = false;
+    bool is_source_a_dir;
+    bool is_source_a_symlink = (global_symlinks.find(s_path) != global_symlinks.end());
     try {
 
         // assert that source exists
-        unordered_map<string, string>::iterator it = global_symlinks.find(s_path);
-        if (it == global_symlinks.end()) {
+        if (!is_source_a_symlink) {
             ZooFile source_file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_path));
             if (source_file.exists()) {
-                if (source_file.isDir()) {
-                    LOG(context, Logger::ERROR, "Renaming directories is not supported, tried to rename %s", path);
+                is_source_a_dir = source_file.isDir();
+                if (is_source_a_dir && source_file.hasChildren()) {
+                    LOG(context, Logger::ERROR, "Renaming non-empty directories is not supported, tried to rename %s", path);
                     return -ENOSYS;
                 }
+            } else {    // file does not exist!
+                return -ENOENT;
             }
-
         }
 
         // delete the target, if it exists
-        it = global_symlinks.find(s_target);
+        unordered_map<string, string>::iterator it = global_symlinks.find(s_target);
         if (it != global_symlinks.end()) {
             string target = it->second;
             global_symlinks.erase(it);
@@ -366,14 +369,12 @@ static int rename_callback(const char * path, const char * target) {
 
             if (file.exists()) {
                 file.remove();
-            } else {
-                return -ENOENT;     // source did not exist
             }
         }
 
         // copy the file
         it = global_symlinks.find(s_path);
-        if (it != global_symlinks.end()) {
+        if (is_source_a_symlink) {
             string target = it->second;
             global_symlinks.erase(it);
             global_symlinks[target] = target;
@@ -383,8 +384,13 @@ static int rename_callback(const char * path, const char * target) {
             ZooFile target_file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(s_target));
 
             target_file.create();
-            target_file.setContent(source_file.getContent());
-            target_file.markAsFile();
+            if (is_source_a_dir) {
+                target_file.markAsDirectory();
+            } else {
+                target_file.setContent(source_file.getContent());
+                target_file.markAsFile();
+            }
+
             source_file.remove();
         }
     } catch (ZooFileException e) {

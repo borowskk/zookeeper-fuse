@@ -132,6 +132,11 @@ vector<string> ZooFile::getChildren() const {
     return retval;
 }
 
+bool ZooFile::hasChildren() const {
+    vector<string> children = getChildren();
+    return (children.size() > 0);
+}
+
 string ZooFile::getContent() const {
     Stat stat;
     char content[MAX_FILE_SIZE];

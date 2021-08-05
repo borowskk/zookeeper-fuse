@@ -66,6 +66,7 @@ public:
 
     bool exists() const;
     bool isDir() const;
+    bool hasChildren() const;   // works only in HYBRID mode, returns 0 if this is a file
 
     /**
      * Check if we have seen this file previously, and mark it as a directory if we haven't
