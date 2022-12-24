@@ -634,8 +634,8 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
                 filler(buf, child_path.filename().c_str(), NULL, 0);
                 LOG(context, Logger::DEBUG, "adding a symlink %s", child_path.filename().c_str());
             }
-            symlink_mutex.unlock();
         }
+        symlink_mutex.unlock();
     }
     try {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
