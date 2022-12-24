@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2016 Kyle Borowski
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,7 @@
  *
  * File:   ZooContext.cpp
  * Author: kyle
- * 
+ *
  * Created on July 31, 2016, 10:37 AM
  */
 
@@ -27,8 +27,8 @@
 #include "logger/Logger.h"
 #include "logger/Log4CPPLogger.h"
 
-ZookeeperFuseContext::ZookeeperFuseContext(Logger::LogLevel maxLevel, const string &hosts, const string &authScheme, const string &auth, const string &path, LeafMode leafMode, size_t maxFileSize):
-hosts_(hosts), authSheme_(authScheme), auth_(auth), path_(path), handle_(NULL), leafMode_(leafMode), maxFileSize_(maxFileSize), eventQueue_(8) {
+ZookeeperFuseContext::ZookeeperFuseContext(Logger::LogLevel maxLevel, const string &hosts, const string &authScheme, const string &auth, const string &path, LeafMode leafMode):
+hosts_(hosts), authSheme_(authScheme), auth_(auth), path_(path), handle_(NULL), leafMode_(leafMode), eventQueue_(8) {
 #ifdef HAVE_LOG4CPP
     logger_.reset(new Log4CPPLogger(maxLevel));
 #else
@@ -69,7 +69,7 @@ zhandle_t* ZookeeperFuseContext::getZookeeperHandle() {
             cerr << "Failed to create zookeeper handle with error: " << errno << endl;
             return NULL;
         }
-        
+
         if (!authSheme_.empty() && !auth_.empty()) {
             cout << "Will authenticate with scheme: " << authSheme_ << " and authentication: " << auth_ << endl;
             int rc = zoo_add_auth(handle_, authSheme_.c_str(), auth_.c_str(), auth_.size(), NULL, NULL);
@@ -78,7 +78,7 @@ zhandle_t* ZookeeperFuseContext::getZookeeperHandle() {
             }
         }
 
-        // Should eventually use a mechanism with a blocking wait    
+        // Should eventually use a mechanism with a blocking wait
         char event;
         while (!eventQueue_.pop(event)) {
             cout << "Waiting for the zookeeper connection to be established." << endl;
@@ -91,7 +91,7 @@ zhandle_t* ZookeeperFuseContext::getZookeeperHandle() {
 string ZookeeperFuseContext::getPath() const {
     return path_;
 }
- 
+
 void ZookeeperFuseContext::setPath(const string &path) {
     path_ = path;
 }
@@ -104,14 +104,6 @@ void ZookeeperFuseContext::setLeafMode(LeafMode leafMode) {
     leafMode_ = leafMode;
 }
 
-size_t ZookeeperFuseContext::getMaxFileSize() const {
-    return maxFileSize_;
-}
-
-void ZookeeperFuseContext::setMaxFileSize(size_t maxFileSize) {
-    maxFileSize_ = maxFileSize;
-}
-
 ZookeeperFuseContext* ZookeeperFuseContext::getZookeeperFuseContext(fuse_context* context) {
     if (context) {
         ZookeeperFuseContext* zooContext = reinterpret_cast<ZookeeperFuseContext*>(context->private_data);
@@ -121,6 +113,7 @@ ZookeeperFuseContext* ZookeeperFuseContext::getZookeeperFuseContext(fuse_context
     }
     throw ZookeeperFuseContextException("Could not get the zookeeper context from fuse", ZINVALIDSTATE);
 }
+
 
 zhandle_t* ZookeeperFuseContext::getZookeeperHandle(fuse_context* context) {
     ZookeeperFuseContext* zooContext = getZookeeperFuseContext(context);

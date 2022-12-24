@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright 2016 Kyle Borowski
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +36,8 @@ using namespace boost;
 
 enum LeafMode {
     LEAF_AS_DIR,
-    LEAF_AS_FILE
+    LEAF_AS_FILE,
+    LEAF_AS_HYBRID
 };
 
 class ZookeeperFuseContextException : public std::exception {
@@ -66,42 +67,39 @@ private:
 
 class ZookeeperFuseContext {
 public:
-    ZookeeperFuseContext(Logger::LogLevel maxLevel, const string &hosts, const string &authScheme, const string &auth, const string &path, 
-                         LeafMode leafMode, size_t maxFileSize);
+    ZookeeperFuseContext(Logger::LogLevel maxLevel, const string &hosts, const string &authScheme, const string &auth, const string &path,
+                         LeafMode leafMode);
     virtual ~ZookeeperFuseContext();
 
     Logger& getLogger();
 
     zhandle_t* getZookeeperHandle();
-    
+
     string getPath() const;
-    void setPath(const string &path);    
+    void setPath(const string &path);
 
     LeafMode getLeafMode() const;
     void setLeafMode(LeafMode leafMode);
 
-    size_t getMaxFileSize() const;
-    void setMaxFileSize(size_t maxFileSize);
-   
     void fireConnectedEvent();
- 
+
     static ZookeeperFuseContext* getZookeeperFuseContext(fuse_context* context);
     static zhandle_t* getZookeeperHandle(fuse_context* context);
 
 private:
     ZookeeperFuseContext(const ZookeeperFuseContext& orig);
     ZookeeperFuseContext& operator=(const ZookeeperFuseContext &rhs);
-    
+
     string hosts_;
     string authSheme_;
     string auth_;
     string path_;
     LeafMode leafMode_;
-    size_t maxFileSize_;
     zhandle_t* handle_;
     boost::lockfree::queue<char> eventQueue_;
     auto_ptr<Logger> logger_;
 };
 
+static void zkWatcher(zhandle_t *zh, int type, int state, const char *path, void *watcherCtx);
 #endif	/* ZOOCONTEXT_H */
 

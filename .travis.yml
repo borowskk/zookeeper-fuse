@@ -1,0 +1,8 @@
+compiler:
+  - gcc
+script:
+  - sudo apt-get install -y --no-install-recommends libboost-filesystem-dev libfuse-dev libzookeeper-mt-dev libbsd-dev
+  - autoreconf -fi
+  - bash configure
+  - make -j4
+language: c++

@@ -1,5 +1,5 @@
-/* 
- * Copyright 2016 Kyle Borowski
+/*
+ * Copyright 2016-2021 Kyle Borowski & Piotr Maślanka
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,14 @@
  * limitations under the License.
  *
  * File:   ZooFile.h
- * Author: kyle
+ * Author: kyle & Piotr Maślanka
  *
  * Created on July 27, 2016, 7:52 PM
  */
 
 #ifndef ZOOFILE_H
 #define	ZOOFILE_H
-
+#define DBOOST_STACKTRACE_USE_ADDR2LINE
 #include <vector>
 #include <string>
 #include <exception>
@@ -30,28 +30,27 @@
 #include <zookeeper/zookeeper.h>
 
 using namespace std;
-using namespace boost;
 
 class ZooFileException : public std::exception {
 public:
     ZooFileException(string msg, int rc) :
     msg_(msg), rc_(rc) {
-        
+
     }
-    
+
     virtual ~ZooFileException() throw() {
-        
+
     }
-    
+
     virtual const char* what() const throw()
     {
       return msg_.c_str();
     }
-    
+
     int getErrorCode() const throw() {
         return rc_;
     }
-    
+
 private:
     string msg_;
     int rc_;
@@ -60,25 +59,43 @@ private:
 class ZooFile {
 public:
     static const size_t MAX_FILE_SIZE;
-    
+
     ZooFile(zhandle_t*, const string &path);
     ZooFile(const ZooFile& orig);
     virtual ~ZooFile();
-    
-    bool exits() const;
+
+    bool exists() const;
     bool isDir() const;
-    
+    bool hasChildren() const;   // works only in HYBRID mode, returns 0 if this is a file
+
+    /**
+     * Check if we have seen this file previously, and mark it as a directory if we haven't
+     */
+    void markAsDirectory() const;
+    /**
+     * Check if we have seen this file previously, and mark it as a file if we haven't
+     */
+    void markAsFile() const;
+
     vector<string> getChildren() const;
     string getContent() const;
     void remove();
-    
+    /**
+     * This is ever only called in LEAF_AS_HYBRID mode, and the only watch is then set is
+     * for /__symlinks__
+     */
+    string getContentAndSetWatch() const;
     void setContent(string);
     void create();
-    
+    size_t getLength() const;
+
 private:
     zhandle_t* handle_;
     const string path_;
 };
+
+
+void enableHybridMode();
 
 #endif	/* ZOOFILE_H */
 
