@@ -48,9 +48,9 @@ string ZooFile::getContentAndSetWatch() const {
 
     string retval;
     if (contentLength > 0) {
-            retval = string(content, contentLength);
-        } else {
-            retval = "";
+        retval = string(content, contentLength);
+    } else {
+        retval = "";
     }
 
     return retval;
@@ -140,7 +140,7 @@ bool ZooFile::hasChildren() const {
 string ZooFile::getContent() const {
     Stat stat;
     char content[MAX_FILE_SIZE];
-    int contentLength = MAX_FILE_SIZE;
+    unsigned int contentLength = MAX_FILE_SIZE;
 
     memset( content, 0, MAX_FILE_SIZE );
     memset( &stat, 0, sizeof(stat) );

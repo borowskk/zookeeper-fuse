@@ -51,7 +51,7 @@ Limitations
 * Date of last access and modification are not kept track of
 * Chmods are 755 for directories and 777 for files
     * unless you're using a leaf display mode of HYBRID, there it's all 777
-* Displaying Leaf Nodes: In the Zookeeper, even directories can have contents. An aspect which is difficult to represent within the constraints of a fuse filesystem. As such, two leaf display modes are supported: DIR and FILE. In both modes the contents of directories are stored in special "_zoo_data_" files. The differences between the display modes are as follows:
+* Displaying Leaf Nodes: In the Zookeeper, even directories can have contents. An aspect which is difficult to represent within the constraints of a fuse filesystem. As such, three leaf display modes are supported: DIR, FILE and HYBRID. In both modes the contents of directories are stored in special "_zoo_data_" files. The differences between the display modes are as follows:
     1. DIR: Display all leaf nodes as directories, has the side-effect that new files can only be created using mkdir.
     2. FILE: Display all leaf nodes as files, has the side-effect that directories cannot be created.
     3. HYBRID: Read more below.
