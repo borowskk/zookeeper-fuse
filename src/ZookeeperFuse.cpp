@@ -639,9 +639,6 @@ static int readdir_callback(const char *path, void *buf, fuse_fill_dir_t filler,
     }
     try {
         ZooFile file(ZookeeperFuseContext::getZookeeperHandle(fuse_get_context()), getFullPath(path));
-
-
-
         vector<string> children = file.getChildren();
         for (size_t i = 0; i < children.size(); i++) {
             if ((context->getLeafMode() != LEAF_AS_HYBRID) && (dataNodeName == children[i])) {
